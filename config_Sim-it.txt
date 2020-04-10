@@ -51,12 +51,14 @@ Project:
 -----------------------------
 Project name             = Choose a name for your project, it will be used for the output files.
 Reference sequence       = /path/to/reference.fasta  #it can be a gzipped file
-Replace ambiguous nts(N) = If the reference contains regions with ambiguous nucleotides, these can be replaced by random nucleotides to avoid reads consisting out of Ns (yes/no) (Default: no)
+Replace ambiguous nts(N) = If the reference contains regions with ambiguous nucleotides, these can be replaced by 
+                           random nucleotides to avoid reads consisting out of Ns (yes/no) (Default: no)
 
 
 Structural variation:
 -----------------------------
-VCF input                = A list of SV positions can be given as input, look at the wiki section for the format of the VCF input. This option can be combined with random SV inputs
+VCF input                = A list of SV positions can be given as input, look at the wiki section for the format of 
+                           the VCF input. This option can be combined with random SV inputs
 Foreign sequences        = If foreign sequences have to be inserted in the reference, they need to listed in a fasta file 
 
 Deletions                = Deletions count (Default: 0)
@@ -88,6 +90,9 @@ Read simulation:
 -----------------------------
 Coverage                 = The genome coverage of the long reads (Default: 0)
 Median length            = The average length of the reads (Default: 25000)
-Length range             = The range for the lengths of the reads, it will give a normal distribution around the median length (Default: 500-150000)
+Length range             = The range for the lengths of the reads, it will give a normal distribution around the 
+                           median length (Default: 500-150000)
 Accuracy                 = The average accuracy of the reads (Default: 88%)
-Error profile            = This is a file that contains the error profile of the sequencing technology, the github page provides ONT, PacBio RS, Sequel, Sequel II & CCS/HiFi. These error profiles will provide the ratios, which will kept when adjusting the average accuracy to your liking
+Error profile            = This is a file that contains the error profile of the sequencing technology, the github page 
+                           provides ONT, PacBio RS, Sequel, Sequel II & CCS/HiFi. These error profiles will provide the 
+                           ratios, which will kept when adjusting the average accuracy to your liking
