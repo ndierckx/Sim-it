@@ -94,5 +94,5 @@ Length range             = The range for the lengths of the reads, it will give 
                            median length (Default: 500-150000)
 Accuracy                 = The average accuracy of the reads (Default: 88%)
 Error profile            = This is a file that contains the error profile of the sequencing technology, the github page 
-                           provides ONT, PacBio RS, Sequel, Sequel II & CCS/HiFi. These error profiles will provide the 
+                           provides ONT, PacBio RS2, Sequel II & Sequel CCS/HiFi. These error profiles will provide the 
                            ratios, which will kept when adjusting the average accuracy to your liking
