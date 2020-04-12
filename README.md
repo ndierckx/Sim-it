@@ -15,3 +15,9 @@ Perl
 ## Instructions
 
 **!A more complete manual can found under the wiki section!**
+
+
+Usage:
+
+<code>perl Sim-it1.0.pl -c config_Sim-it.txt -o output/directory/path</code>
+
