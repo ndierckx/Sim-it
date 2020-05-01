@@ -35,7 +35,7 @@ Length (bp)              = 150-350000
 Heterozygosity           = 60%
 
 
-Read simulation:
+Long Read simulation:
 -----------------------------
 Coverage                 = 15
 Median length            = 25000
