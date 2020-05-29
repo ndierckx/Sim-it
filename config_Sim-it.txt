@@ -23,9 +23,6 @@ Copies                   = 1-20
 Inversions               = 0
 Length (bp)              = 150-1300000
 
-Translocations           = 0
-Length (bp)              = 500000-2000000
-
 Complex substitutions    = 0
 Length (bp)              = 30-100000
 
