@@ -1,0 +1,79 @@
+#
+# $Id: simple.dem,v 1.5 2011/08/19 21:01:41 sfeam Exp $
+#
+# Requires data files "[123].dat" from this directory,
+# so change current working directory to this directory before running.
+# gnuplot> set term <term-type>
+# gnuplot> load 'simple.dem'
+#
+set title "Deletions" font ",20"
+set key left box
+set samples 50
+set style data points
+
+set term postscript
+set output "Deletions.ps"
+
+n=7 #number of intervals
+set xlabel "Length"
+set ylabel "Count"
+max=100. #max value
+min=0. #min value
+width=(max-min)/n #interval width
+hist(x,width)=width*floor(x/width)+width/2.0
+set boxwidth width*0.9
+set style fill solid 0.5 # fill style
+set xrange [20:1500]
+set xtics (30,150,330,500,750,1000,1500)
+
+
+plot 'graph_DEL_GRCh38_SV.txt' with boxes                                 #Change_the_path_and_the_name_of_the_DEL_file
+
+
+#pause -1 "Hit return to continue"
+
+#replot 
+reset
+set output "Insertions.ps"
+
+set title "Insertions" font ",20"
+
+n=7 #number of intervals
+set xlabel "Length"
+set ylabel "Count"
+max=100. #max value
+min=0. #min value
+width=(max-min)/n #interval width
+hist(x,width)=width*floor(x/width)+width/2.0
+set boxwidth width*0.9
+set style fill solid 0.5 # fill style
+set xrange [20:1500]
+set xtics (30,150,330,500,750,1000,1500)
+
+
+plot 'graph_INS_GRCh38_SV.txt' with boxes                                 #Change_the_path_and_the_name_of_the_INS_file
+
+
+#pause -1 "Hit return to continue"
+
+reset
+set output "Inversions.ps"
+
+set title "Inversions" font ",20"
+
+width=1
+set xlabel "Length range"
+set ylabel "Count"
+hist(x,width)=width*floor(x/width)+width/2.0
+set boxwidth width*0.9
+set style fill solid 0.5 # fill style
+set xrange [0:6]
+set xtics (0,'0-1 kb' 1,'1-10 kb' 2,'10-100 kb' 3,'100 kb-1 M' 4,'>1 Mb' 5)
+
+
+plot 'graph_INV_GRCh38_SV.txt' with boxes                                                #Change_the_path_and_the_name_of_the_INV_file
+
+
+#pause -1 "Hit return to continue"
+
+reset
