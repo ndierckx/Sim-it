@@ -34,7 +34,7 @@ Heterozygosity           = 60%
 
 Long Read simulation:
 -----------------------------
-Coverage                 = 15
+Coverage                 = 0
 Median length            = 25000
 Length range             = 500-150000
 Accuracy                 = 88%
@@ -70,9 +70,6 @@ Copies                   = The range of how many times the duplicated sequences 
 
 Inversions               = Inversions count (Default: 0)
 Length (bp)              = The range for the length of the Inversions (Default: 150-1300000)
-
-Translocations           = Translocations count (Default: 0)
-Length (bp)              = The range for the length of the Translocations (Default: 500000-2000000)
 
 Complex substitutions    = Complex substitutions count (Default: 0)
 Length (bp)              = The range for the length of the Complex substitutions (Default: 30-100000)
