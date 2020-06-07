@@ -5,7 +5,7 @@
 #              All Rights Reserved                   #
 #         See file LICENSE for details.              #
 ######################################################
-#           Sim+ - The Sequence Simulator
+#           Sim-it - The Sequence Simulator
 #           nicolasdierckxsens@hotmail.com
 use strict;
 use Getopt::Long;
@@ -20,7 +20,6 @@ print "-----------------------------------------------\n\n";
 my $reference = "";
 my $ref_database = "";
 my $project = "";
- #NC_000001.11
 my $kmer = '30';
 my $chromosome = "";
 my $start_end = '250';
@@ -1726,16 +1725,16 @@ sub hap
     {    
         if ($c > 0.5)
         {
-            $hap = "0";
+            $hap = "1/0";
         }
         else
         {
-            $hap = "1";
+            $hap = "0/1";
         }
     }
     else
     {
-        $hap = "0/1";
+        $hap = "1/1";
     }
 }
 #Resets values for next SV & next SV is determined (only for VCF input)-------------------------------------------------------------
@@ -2203,7 +2202,7 @@ NEW_CONTIG0:
         my $tra_seq = $TRA_sequences{$TRA_contig_select2};
         my $check1 = "";
         my $check2 = "";
-        my $hap_tmp = "0/1";
+        my $hap_tmp = "1/1";
         if (exists($TRA_hap1{$chromosome}))
         {
             $check1 = "yes";
@@ -3027,23 +3026,23 @@ TRA_SKIP:
         $haplo_merged_print .= $variation_haplo;
         if ($heterozygosity eq "no")
         {
-            $hap = "0/1";
+            $hap = "1/1";
         }
-        if ($hap eq "0/1")
+        if ($hap eq "1/1")
         {
             $haplotype1 .= $variation_haplo;
             $haplotype2 .= $variation_haplo;
             $haplotype1_print .= $variation_haplo;
             $haplotype2_print .= $variation_haplo;
         }
-        elsif ($hap eq "0")
+        elsif ($hap eq "1/0")
         {
             $haplotype1 .= $variation_haplo;
             $haplotype2 .= $ref_haplo;
             $haplotype1_print .= $variation_haplo;
             $haplotype2_print .= $ref_haplo;
         }
-        elsif ($hap eq "1")
+        elsif ($hap eq "0/1")
         {
             $haplotype2 .= $variation_haplo;
             $haplotype1 .= $ref_haplo;
