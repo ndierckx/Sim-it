@@ -1183,7 +1183,7 @@ close $FILE_REF;
 
 
 #preprep TRA seq-------------------------------------------------------------------------------------------------------
-
+my $reference_size_tmp = '0';
 if ($VCF_input_TRA > 0)
 {
     my $TRA_length_tmp = "";
@@ -1205,10 +1205,10 @@ if ($VCF_input_TRA > 0)
     while (my $line = <$FILE_REF>)
     {     
         chomp $line;
-        if ($reference_size < 1)
+        if ($reference_size_tmp < 1)
         {
             $last_contig_id = $line;
-            $reference_size++;
+            $reference_size_tmp++;
             $current_contig_tmp++;
             if ($line =~ m/>(\d+|X|Y|MT)\s+dna:chromosome.*/)
             {
@@ -1227,24 +1227,22 @@ if ($VCF_input_TRA > 0)
                 $chromosome_tmp = substr $line, 1;
             }
 
-#preprep TRA seq-------------------------------------------------------------------------        
             $TRA_length_tmp = "";
             $TRA_seq_tmp = "";
             if (exists($TRA_hap1{$chromosome_tmp}))
-            {
+            {          
                 foreach my $line_tmp2 (sort {$a <=> $b} keys %{$TRA_hap1{$chromosome_tmp}})
                 {
                     $TRA_length_tmp = $TRA_hap1{$chromosome_tmp}{$line_tmp2};
                 }
             }
             if (exists($TRA_hap2{$chromosome_tmp}))
-            {
+            {             
                 foreach my $line_tmp2 (sort {$a <=> $b} keys %{$TRA_hap2{$chromosome_tmp}})
                 {
                     $TRA_length_tmp = $TRA_hap2{$chromosome_tmp}{$line_tmp2};
                 }
             }
-#-----------------------------------------------------------------------------------------
             next;
         }
         elsif ($length_fasta_line eq "")
