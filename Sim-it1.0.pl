@@ -514,7 +514,8 @@ while (my $line = <CONFIG>)
                 chomp $NP_error_profile;
                 last;
             }
-        }   
+        }
+        last;
     }
 }
 close CONFIG;
