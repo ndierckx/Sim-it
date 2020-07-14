@@ -13,7 +13,7 @@ use Time::HiRes qw(time);
 
 print "\n\n-----------------------------------------------";
 print "\nSim-it\n";
-print "Version 1.0\n";
+print "Version 1.1\n";
 print "Author: Nicolas Dierckxsens, (c) 2020\n";
 print "-----------------------------------------------\n\n";
 
