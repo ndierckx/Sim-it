@@ -20,6 +20,7 @@ print "-----------------------------------------------\n\n";
 my $reference = "";
 my $ref_database = "";
 my $project = "";
+ #NC_000001.11
 my $kmer = '30';
 my $chromosome = "";
 my $start_end = '250';
@@ -561,7 +562,10 @@ elsif ($INS_input > 0)
 {
     $INS_range = "30-100000";
 }
-
+if ($NP_error_profile eq "" && $NP_coverage > 0)
+{
+    die "\n\nAn error profile should be given$!\n";
+}
 #----------------------------------------------------------------------------------------------------
 
 if ($SV_input ne "")
@@ -1809,6 +1813,10 @@ undef %NP_seq_length2;
 if ($NP_accuracy =~ m/^(\d+)%.*$/)
 {
     $NP_accuracy = $1;
+}
+else
+{
+    $NP_accuracy = 100-($mismatch_percentage+$ins_percentage+$del_percentage);
 }
 my $NP_error_rate = 100-$NP_accuracy;
 my $NP_min_read_length = '10000000000000000';
