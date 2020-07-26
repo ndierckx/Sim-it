@@ -3185,10 +3185,11 @@ NP_LENGTH1:
                     my $t= rand(1.5);
                     $t+= 1;
                     my $random_error_rate = int(($NP_error_rate/($t*$j))+$NP_error_rate-($NP_error_rate/2.2));
+                    my $extra_error = rand(($NP_error_rate/12)/100);
 
-                    my $NP_deletion_rate = rand(0.01)+($random_error_rate*($del_percentage/($del_percentage+$ins_percentage+$mismatch_percentage)))/100;
-                    my $NP_insertion_rate = rand(0.01)+($random_error_rate*($ins_percentage/($del_percentage+$ins_percentage+$mismatch_percentage)))/100;
-                    my $NP_mismatch_rate = rand(0.01)+($random_error_rate*($mismatch_percentage/($del_percentage+$ins_percentage+$mismatch_percentage)))/100;
+                    my $NP_deletion_rate = $extra_error+($random_error_rate*($del_percentage/($del_percentage+$ins_percentage+$mismatch_percentage)))/100;
+                    my $NP_insertion_rate = $extra_error+($random_error_rate*($ins_percentage/($del_percentage+$ins_percentage+$mismatch_percentage)))/100;
+                    my $NP_mismatch_rate = $extra_error+($random_error_rate*($mismatch_percentage/($del_percentage+$ins_percentage+$mismatch_percentage)))/100;
                     
                     if ($NP_error_rate eq '0')
                     {
@@ -3590,10 +3591,11 @@ NP_LENGTH2:
                         my $t= rand(1.5);
                         $t+= 1;
                         my $random_error_rate = int(($NP_error_rate/($t*$j))+$NP_error_rate-($NP_error_rate/2.2));
-
-                        my $NP_deletion_rate = rand(0.01)+($random_error_rate*($del_percentage/($del_percentage+$ins_percentage+$mismatch_percentage)))/100;
-                        my $NP_insertion_rate = rand(0.01)+($random_error_rate*($ins_percentage/($del_percentage+$ins_percentage+$mismatch_percentage)))/100;
-                        my $NP_mismatch_rate = rand(0.01)+($random_error_rate*($mismatch_percentage/($del_percentage+$ins_percentage+$mismatch_percentage)))/100;             
+                        my $extra_error = rand(($NP_error_rate/12)/100);
+                        
+                        my $NP_deletion_rate = $extra_error+($random_error_rate*($del_percentage/($del_percentage+$ins_percentage+$mismatch_percentage)))/100;
+                        my $NP_insertion_rate = $extra_error+($random_error_rate*($ins_percentage/($del_percentage+$ins_percentage+$mismatch_percentage)))/100;
+                        my $NP_mismatch_rate = $extra_error+($random_error_rate*($mismatch_percentage/($del_percentage+$ins_percentage+$mismatch_percentage)))/100;             
                         
                         if ($NP_error_rate eq '0')
                         {
@@ -4021,10 +4023,11 @@ NP_FIRST_50:
                         my $t= rand(1.5);
                         $t+= 1;
                         my $random_error_rate = int(($NP_error_rate/($t*$j))+$NP_error_rate-($NP_error_rate/2.2));
+                        my $extra_error = rand(($NP_error_rate/12)/100);
 
-                        my $NP_deletion_rate = rand(0.01)+($random_error_rate*($del_percentage/($del_percentage+$ins_percentage+$mismatch_percentage)))/100;
-                        my $NP_insertion_rate = rand(0.01)+($random_error_rate*($ins_percentage/($del_percentage+$ins_percentage+$mismatch_percentage)))/100;
-                        my $NP_mismatch_rate = rand(0.01)+($random_error_rate*($mismatch_percentage/($del_percentage+$ins_percentage+$mismatch_percentage)))/100;          
+                        my $NP_deletion_rate = $extra_error+($random_error_rate*($del_percentage/($del_percentage+$ins_percentage+$mismatch_percentage)))/100;
+                        my $NP_insertion_rate = $extra_error+($random_error_rate*($ins_percentage/($del_percentage+$ins_percentage+$mismatch_percentage)))/100;
+                        my $NP_mismatch_rate = $extra_error+($random_error_rate*($mismatch_percentage/($del_percentage+$ins_percentage+$mismatch_percentage)))/100;          
                         
                         if ($NP_error_rate eq '0')
                         {
