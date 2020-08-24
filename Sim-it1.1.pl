@@ -2790,6 +2790,7 @@ VCF_INPUT_DUP:
                 if ($NEXT_SV eq "IDUP")
                 {
                     $duplication = reverse($duplication_tmp2);
+                    $duplication =~ tr/ACTG/TGAC/;
                 }
                 
                 $variation_haplo .= $duplication;
@@ -2845,6 +2846,7 @@ VCF_INPUT_DUP:
                 if ($NEXT_SV eq "IDUP")
                 {
                     $duplication = reverse($duplication_tmp2);
+                    $duplication =~ tr/ACTG/TGAC/;
                 }
                 
                 if ($SVs_whitin_1_line eq "yes")
@@ -2940,6 +2942,7 @@ VCF_INPUT_INV:
             {
                 my $inversion_tmp = substr $line_tmp, 0, $random_length_INV, "";
                 my $inversion = reverse($inversion_tmp);
+                $inversion =~ tr/ACTG/TGAC/;
 
                 $variation_haplo .= $inversion;
                 $variation_haplo .= $line_tmp;
@@ -2968,6 +2971,7 @@ VCF_INPUT_INV:
                 my $inversion_tmp = substr $line_tmp, 0, $random_length_INV-$inverting, "";
                 $inversion_seq .= $inversion_tmp;
                 my $inversion = reverse($inversion_seq);
+                $inversion =~ tr/ACTG/TGAC/;
                 $inverting = "";
                 $finish_var = "yes";
 
