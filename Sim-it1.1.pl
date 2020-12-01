@@ -13,7 +13,7 @@ use Time::HiRes qw(time);
 
 print "\n\n-----------------------------------------------";
 print "\nSim-it\n";
-print "Version 1.1\n";
+print "Version 1.2\n";
 print "Author: Nicolas Dierckxsens, (c) 2020\n";
 print "-----------------------------------------------\n\n";
 
@@ -726,19 +726,26 @@ if ($VCF_input ne "")
     {
         open (INPUT_SEQ, $sequences_foreign) or die "Can't open file $sequences_foreign, $!\n";
         my $id = "";
+        my $seq = "";
         while (my $line_seq = <INPUT_SEQ>)
         {
             chomp $line_seq;
             my $first_tmp = substr $line_seq, 0, 1, "";
-            if ($first_tmp eq ">")
+            if ($first_tmp eq ">" && $id eq "")
             {
+                $id = $line_seq;
+            }
+            elsif ($first_tmp eq ">")
+            {
+                $foreign_contigs{$id} = $seq;
                 $id = $line_seq;
             }
             elsif ($line_seq ne "" && $line_seq ne " ")
             {
-                $foreign_contigs{$id} = $line_seq;
+                $seq += $line_seq;
             }  
         }
+        $foreign_contigs{$id} = $seq;
         close INPUT_SEQ;
     }
     open (INPUT_VCF, $VCF_input) or die "Can't open file $VCF_input, $!\n";
