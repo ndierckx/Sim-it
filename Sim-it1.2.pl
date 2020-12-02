@@ -742,7 +742,7 @@ if ($VCF_input ne "")
             }
             elsif ($line_seq ne "" && $line_seq ne " ")
             {
-                $seq += $line_seq;
+                $seq .= $line_seq;
             }  
         }
         $foreign_contigs{$id} = $seq;
@@ -1969,7 +1969,7 @@ REF:while (my $line = <$FILE_REF>)
                     {
                         if (exists($foreign_contigs{$SEQ_tmp}))
                         {
-                            $sequences_foreign{$start_pos_tmp} = $foreign_contigs{$SEQ_tmp};
+                            $sequences_foreign{$start_pos_tmp} = $foreign_contigs{$SEQ_tmp}; 
                         }
                     }
                     if ($chr_tmp eq $chromosome && $type_tmp ne "TRA")
@@ -2468,9 +2468,9 @@ VCF_INPUT_DEL:
 
                 if ($NEXT_SV eq "CSUB")
                 {
-                    if (exists($sequences_foreign{$SEQ}))
+                    if (exists($foreign_contigs{$SEQ}) && exists($sequences_foreign{$pos_tmp}))
                     {
-                        insert_seq ($random_length_DEL,$sequences_foreign{$SEQ});
+                        insert_seq ($random_length_DEL,$foreign_contigs{$SEQ});
                     }
                     elsif (exists($sequences_final{$SEQ}))
                     {
@@ -2537,9 +2537,9 @@ VCF_INPUT_DEL:
                 if ($csubbing eq "yes")
                 {
                     $csubbing = "";
-                    if (exists($sequences_foreign{$SEQ}))
+                    if (exists($foreign_contigs{$SEQ}))
                     {
-                        insert_seq ($random_length_DEL,$sequences_foreign{$SEQ});
+                        insert_seq ($random_length_DEL,$foreign_contigs{$SEQ});
                     }
                     elsif (exists($sequences_final{$SEQ}))
                     {
@@ -2590,10 +2590,10 @@ VCF_INPUT_DEL:
 
                 print OUTPUT_VCF $chromosome."\t".$next_pos."\t".$random_length_INS."\t".$next_type."\t".$next_hap."\t".$next_seq."\n";
                 $VCF_output{$next_pos} = undef;
-                
-                if (exists($sequences_foreign{$next_seq}))
+
+                if (exists($foreign_contigs{$next_seq}) && exists($sequences_foreign{$next_pos}))
                 {
-                    $insert = $sequences_foreign{$next_seq};
+                    $insert = $sequences_foreign{$next_pos};
                 }
                 elsif (exists($sequences_final{$next_seq}))
                 {
@@ -2758,9 +2758,9 @@ VCF_INPUT_DUP:
             }
             $VCF_output{$pos_tmp} = undef;
             
-            if (exists($sequences_final{$SEQ}) || exists($sequences_foreign{$SEQ}))
+            if (exists($sequences_final{$SEQ}) || exists($foreign_contigs{$SEQ}))
             {
-                my $duplication_tmp = $sequences_foreign{$SEQ};
+                my $duplication_tmp = $foreign_contigs{$SEQ};
                 if (exists($sequences_final{$SEQ}))
                 {
                     $duplication_tmp = $sequences_final{$SEQ};
