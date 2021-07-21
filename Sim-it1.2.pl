@@ -2349,10 +2349,10 @@ SELECT_SV:
         }
         elsif ($next_pos < $size_current_contig && $VCF_input ne "" && $inverting eq "" && $duplicating eq "" && $deleting eq "" && $next_pos ne "")
         {
-            print OUTPUT_LOG $NEXT_SV." ALARM\n";
-            print OUTPUT_LOG $next_type." next_type\n";
-            print OUTPUT_LOG $next_pos." next_pos\n";
-            print OUTPUT_LOG $size_current_contig." CURRENT_C\n";
+            #print OUTPUT_LOG $NEXT_SV." ALARM\n";
+            #print OUTPUT_LOG $next_type." next_type\n";
+            #print OUTPUT_LOG $next_pos." next_pos\n";
+            #print OUTPUT_LOG $size_current_contig." CURRENT_C\n";
             VCF_input_sub;
         }
         elsif ($NEXT_SV eq "" && $reference_size2 > $TOTAL_interval_tmp && $deleting eq "" && $inverting eq "" && $duplicating eq "")
