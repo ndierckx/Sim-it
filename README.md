@@ -19,7 +19,7 @@ Perl
 
 Usage:
 
-<code>perl Sim-it1.0.pl -c config_Sim-it.txt -o output/directory/path</code>
+<code>perl Sim-it1.2.pl -c config_Sim-it.txt -o output/directory/path</code>
 
 
 ----------------------------------------------------------------------------------------------------------
@@ -70,7 +70,7 @@ Heterozygosity           = 60%
 
 Long Read simulation:
 -----------------------------
-Coverage                 = 0
+Sequencing depth         = 0
 Median length            = 25000
 Length range             = 500-150000
 Accuracy                 = 88%
