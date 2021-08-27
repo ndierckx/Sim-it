@@ -118,7 +118,8 @@ Heterozygosity           = The percentage of heterozygous SVs (Default: 60%)
 
 Read simulation:
 -----------------------------
-Coverage                 = The genome coverage of the long reads (Default: 0)
+Sequencing depth         = The genome coverage of the long reads (Default: 0). 
+                           Besides a fixed value, the path to a sequencing depth profile obtained with samtools can be given.
 Median length            = The average length of the reads (Default: 25000)
 Length range             = The range for the lengths of the reads, it will give a normal distribution around the 
                            median length (Default: 500-150000)
