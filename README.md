@@ -19,7 +19,7 @@ Perl
 
 Usage:
 
-<code>perl Sim-it1.2.pl -c config_Sim-it.txt -o output/directory/path</code>
+<code>perl Sim-it1.2.1.pl -c config_Sim-it.txt -o output/directory/path</code>
 
 
 ----------------------------------------------------------------------------------------------------------
