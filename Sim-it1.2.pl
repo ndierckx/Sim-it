@@ -13,8 +13,8 @@ use Time::HiRes qw(time);
 
 print "\n\n-----------------------------------------------";
 print "\nSim-it\n";
-print "Version 1.2\n";
-print "Author: Nicolas Dierckxsens, (c) 2020\n";
+print "Version 1.2.1\n";
+print "Author: Nicolas Dierckxsens, (c) 2020-2021\n";
 print "-----------------------------------------------\n\n";
 
 my $reference = "";
@@ -562,7 +562,7 @@ elsif ($INS_input > 0)
 {
     $INS_range = "30-100000";
 }
-if ($NP_error_profile eq "" && $NP_coverage > 0)
+if ($NP_error_profile eq "" && $NP_coverage ne "")
 {
     die "\n\nAn error profile should be given$!\n";
 }
@@ -688,6 +688,48 @@ if ($heterozygosity eq '0')
 {
     $heterozygosity = "no";
 }
+my $seq_depth = "";
+my %seq_depth;
+if ($NP_coverage =~ m/^\d+$/)
+{   
+}
+else
+{
+    print "\n--------------------------READ SEQUENCING DEPTH FILE----------------------------\n\n";
+    print OUTPUT_LOG "\n--------------------------READ SEQUENCING DEPTH FILE----------------------------\n\n";
+    open(SEQ_DEPTH, $NP_coverage) or die "\nCan't open sequencing depth file $NP_coverage, $!\n";
+    $seq_depth = $NP_coverage;
+    $NP_coverage = "";
+    my $total_coverage = '0';
+    my $total_coverage_tmp = '0';
+    my $count_line = '0';
+    my $hunderd = '1';
+    my $chr_prev = "";
+    
+    while (my $line = <SEQ_DEPTH>)
+    {
+        chomp($line);
+        my @line = split /\t/, $line;
+        $total_coverage += $line[2];
+        $total_coverage_tmp += $line[2];
+        my $last_two = substr $line[1], -2;
+        if ($last_two eq "00" || ($chr_prev ne $line[0] && $chr_prev ne ""))
+        {
+            my $cov = sprintf("%.0f",($total_coverage_tmp/$hunderd));
+            my $pos = substr $line[1], 0, -2;
+            $seq_depth{$line[0]}{$pos} = $cov;
+            $total_coverage_tmp = '0';
+            $hunderd = '0';
+        }     
+        $count_line++;
+        $hunderd++;
+        $chr_prev = $line[0];
+    }
+    $NP_coverage = $total_coverage/$count_line;
+    print "Average sequencing depth            = ".$NP_coverage."\n\n";
+    print OUTPUT_LOG "Average sequencing depth            = ".$NP_coverage."\n\n";
+}
+
 
 my $VCF_input_DEL = '0';
 my $VCF_input_INS = '0';
@@ -1774,7 +1816,13 @@ SVCF:foreach my $start_pos_tmp (sort {$a <=> $b} keys %VCF_input)
         $next_length = $vcf_input[1];
         $next_hap = $vcf_input[2];
         $next_seq = $vcf_input[3];
-        delete $VCF_input{$start_pos_tmp};  
+        delete $VCF_input{$start_pos_tmp};
+        if ($next_hap eq "0/0")
+        {
+            $next_hap = "1/1";
+            next SVCF;  
+        }
+        $next_hap =~ tr/\./1/;
         last SVCF;
     }
 }
@@ -1887,7 +1935,7 @@ if ($VCF_input ne "")
 my $progress_print_prev = '0';
 my $progress_print = "";
 
-if ($heterozygosity > 0 && $NP_coverage > 0)
+if (($heterozygosity > 0 || $VCF_input ne "") && $NP_coverage > 0)
 {
     $NP_coverage1 = ($NP_coverage)/2;
     if ($NP_coverage1 % 2 == 0)
@@ -1980,14 +2028,20 @@ REF:while (my $line = <$FILE_REF>)
             }
             foreach my $start_pos_tmp (sort {$a <=> $b} keys %VCF_input)
             {
-               my @vcf_input = split /\*/, $VCF_input{$start_pos_tmp};
-               $next_pos = $start_pos_tmp;
-               $next_type = $vcf_input[0];
-               $next_length = $vcf_input[1];
-               $next_hap = $vcf_input[2];
-               $next_seq = $vcf_input[3];
-               delete $VCF_input{$start_pos_tmp};
-               last;
+                my @vcf_input = split /\*/, $VCF_input{$start_pos_tmp};
+                $next_pos = $start_pos_tmp;
+                $next_type = $vcf_input[0];
+                $next_length = $vcf_input[1];
+                $next_hap = $vcf_input[2];
+                $next_seq = $vcf_input[3];
+                delete $VCF_input{$start_pos_tmp};
+                if ($next_hap eq "0/0")
+                {
+                    $next_hap = "1/1";
+                    next;  
+                }
+                $next_hap =~ tr/\./1/;             
+                last;
             }
         }
         if (exists($TRA_hap1{$chromosome}))
@@ -2146,14 +2200,20 @@ NEW_CONTIG0:
             }
             foreach my $start_pos_tmp (sort {$a <=> $b} keys %VCF_input)
             {
-               my @vcf_input = split /\*/, $VCF_input{$start_pos_tmp};
-               $next_pos = $start_pos_tmp;
-               $next_type = $vcf_input[0];
-               $next_length = $vcf_input[1];
-               $next_hap = $vcf_input[2];
-               $next_seq = $vcf_input[3];
-               delete $VCF_input{$start_pos_tmp};
-               last;
+                my @vcf_input = split /\*/, $VCF_input{$start_pos_tmp};
+                $next_pos = $start_pos_tmp;
+                $next_type = $vcf_input[0];
+                $next_length = $vcf_input[1];
+                $next_hap = $vcf_input[2];
+                $next_seq = $vcf_input[3];
+                delete $VCF_input{$start_pos_tmp};
+                if ($next_hap eq "0/0")
+                {
+                    $next_hap = "1/1";
+                    next;  
+                }
+                $next_hap =~ tr/\./1/;
+                last;
             }
         }
         next REF;
@@ -2349,10 +2409,10 @@ SELECT_SV:
         }
         elsif ($next_pos < $size_current_contig && $VCF_input ne "" && $inverting eq "" && $duplicating eq "" && $deleting eq "" && $next_pos ne "")
         {
-            #print OUTPUT_LOG $NEXT_SV." ALARM\n";
-            #print OUTPUT_LOG $next_type." next_type\n";
-            #print OUTPUT_LOG $next_pos." next_pos\n";
-            #print OUTPUT_LOG $size_current_contig." CURRENT_C\n";
+            print OUTPUT_LOG $NEXT_SV." ALARM\n";
+            print OUTPUT_LOG $next_type." next_type\n";
+            print OUTPUT_LOG $next_pos." next_pos\n";
+            print OUTPUT_LOG $size_current_contig." CURRENT_C\n";
             VCF_input_sub;
         }
         elsif ($NEXT_SV eq "" && $reference_size2 > $TOTAL_interval_tmp && $deleting eq "" && $inverting eq "" && $duplicating eq "")
@@ -3044,7 +3104,7 @@ TRA_SKIP:
     {       
         $haplo_merged .= $variation_haplo;
         $haplo_merged_print .= $variation_haplo;
-        if ($heterozygosity eq "no")
+        if ($heterozygosity eq "no" && $hap eq "")
         {
             $hap = "1/1";
         }
@@ -3131,11 +3191,25 @@ NEW_CONTIG:
     
 
     if ($NP_coverage > 0)
-    {
+    {    
         my $check_haplo1_start = "";       
 
-        if ($heterozygosity > 0 && $SV_input ne "" && $NP_coverage1 > 0 && length($haplotype1) > 0)
+        if (($heterozygosity > 0 || $VCF_input ne "") && $SV_input ne "" && ($NP_coverage1 > 0 || $seq_depth ne "") && length($haplotype1) > 0)
         {                     
+            if ($seq_depth ne "")
+            {
+                my $pos_tmp = substr $seq_done1, 0, -2;
+                if (exists($seq_depth{$chromosome}{$pos_tmp}))
+                {
+                    $NP_coverage1 = $seq_depth{$chromosome}{$pos_tmp};
+                }
+                else
+                {
+                    $NP_coverage1 = $NP_coverage;
+                    print $chromosome." CHR\n";
+                    print $seq_done1." NOT_POS\n";
+                }
+            }
             while (((length($haplotype1) >= $NP_range_high && ($finish_var_np eq "yes" || $reference_size2 < $random_length_interval || $SV_input eq ""))
                     || ($new_contig eq "yes" && length($haplotype1) > 0)))
             {
@@ -3537,8 +3611,23 @@ NP_LENGTH1:
         }  
         if ($check_haplo1_start eq "yes")
         {         
-            if ($NP_coverage2 > 0 && length($haplotype2) > 0)
+            if (($NP_coverage2 > 0 || $seq_depth ne "") && length($haplotype2) > 0)
             {
+                if ($seq_depth ne "")
+                {
+                    my $pos_tmp = substr $seq_done2, 0, -2;
+                    if (exists($seq_depth{$chromosome}{$pos_tmp}))
+                    {
+                        $NP_coverage2 = $seq_depth{$chromosome}{$pos_tmp};
+                    }
+                    else
+                    {
+                        $NP_coverage2 = $NP_coverage;
+                        print $chromosome." CHR2\n";
+                        print $seq_done2." NOT_POS2\n";
+                    }
+                }
+                
                 while (((length($haplotype2) >= $NP_range_high && ($finish_var_np eq "yes" || $reference_size2 < $random_length_interval || $SV_input eq ""))
                         || ($new_contig eq "yes2" && length($haplotype2) > 0)))
                 {
@@ -3946,7 +4035,7 @@ NP_LENGTH2:
         }
 #No heterozygosity-------------------------------------------------------
 #------------------------------------------------------------------------
-        if ($heterozygosity eq "no")
+        if ($heterozygosity eq "no" && $VCF_input eq "")
         {                   
             if ($NP_coverage > 0 && length($haplo_merged) > 0)
             {        
@@ -4512,3 +4601,4 @@ close OUTPUT_INS;
 close OUTPUT_INV2;
 close INPUT_VCF;
 close OUTPUT_LOG;
+close SEQ_DEPTH;
