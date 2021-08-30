@@ -1,7 +1,7 @@
 #!/usr/bin/env perl
 ######################################################
 #         SOFTWARE COPYRIGHT NOTICE AGREEMENT        #
-#  Copyright (C) {2019-2020}  {Nicolas Dierckxsens}  #
+#  Copyright (C) {2020-2021}  {Nicolas Dierckxsens}  #
 #              All Rights Reserved                   #
 #         See file LICENSE for details.              #
 ######################################################
