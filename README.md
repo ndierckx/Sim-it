@@ -72,9 +72,9 @@ Heterozygosity           = 60%
 Long Read simulation:
 -----------------------------
 Sequencing depth         = 0
-Median length            = 25000
+Median length            = 50000
 Length range             = 500-150000
-Accuracy                 = 88%
+Accuracy                 = 94%
 Error profile            = error_profile_ONT.txt
 </pre>
 
