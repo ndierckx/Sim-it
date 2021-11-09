@@ -15,6 +15,7 @@ Perl
 ## Instructions
 
 **!A more complete manual can found under the wiki section!**
+https://github.com/ndierckx/Sim-it/wiki
 
 
 Usage:
