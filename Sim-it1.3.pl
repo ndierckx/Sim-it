@@ -1,7 +1,7 @@
 #!/usr/bin/env perl
 ######################################################
 #         SOFTWARE COPYRIGHT NOTICE AGREEMENT        #
-#  Copyright (C) {2019-2020}  {Nicolas Dierckxsens}  #
+#  Copyright (C) {2020-2022}  {Nicolas Dierckxsens}  #
 #              All Rights Reserved                   #
 #         See file LICENSE for details.              #
 ######################################################
@@ -14,8 +14,8 @@ use Parallel::ForkManager;
 
 print "\n\n-----------------------------------------------";
 print "\nSim-it\n";
-print "Version 1.3\n";
-print "Author: Nicolas Dierckxsens, (c) 2020\n";
+print "Version 1.3.1\n";
+print "Author: Nicolas Dierckxsens, (c) 2020-2022\n";
 print "-----------------------------------------------\n\n";
 
 my $reference = "";
@@ -570,12 +570,12 @@ if ($NP_error_profile eq "" && $NP_coverage ne "")
 }
 #----------------------------------------------------------------------------------------------------
 
-if (-d $output)
+if (-d $output || $output eq "")
 {
 }
 else
 {
-    die "\nCan't open directory $output, first create this directory,\n $!\n";
+    die "\nCan't open output directory $output, first create this directory,\n $!\n";
 }
 if ($SV_input ne "")
 {
@@ -2209,483 +2209,485 @@ NEW_CONTIG0:
             $tmp_hap2 = "";
         }
         
-        foreach my $haps_tmp (sort keys %haps)
-        {
-            my @haplo_tmp = split /_split_/, $haps_tmp;
-            my $haplo_tmp2 = $haplo_tmp[0];
-            my $chr_tmp = $haplo_tmp[1];
-            $chr_tmp =~ tr/: /__/;
-            my $output_NP_tmp = $output."Nanopore_to_merge_".$project."_".$chr_tmp."_".$haplo_tmp2.".fasta";
-            if (exists($merge_command{$haplo_tmp2}))
-            {
-                my $tmp = $merge_command{$haplo_tmp2}." ".$output_NP_tmp;
-                $merge_command{$haplo_tmp2} = $tmp;
-                #print $tmp." TEST\n";
-            }
-            else
-            {
-                $merge_command{$haplo_tmp2} = $output_NP_tmp;
-            }
-        }
-        
 #-------------------------------------------------------------------------------------------------------------------------------------------------------        
 #Simulate Nanopore reads START PARALLEL LOOP------------------------------------------------------------------------------------------------------------
 #-------------------------------------------------------------------------------------------------------------------------------------------------------
 
-        foreach my $haps_tmp (sort keys %haps)
+        if ($NP_coverage > 0)
         {
-            my $pid = $pm->start and next;
-            
-            my $NP_read_count = '0';
-            my $NP_total_length_tmp = '0';
-            my $NP_min_read_length_tmp = '10000000000000000';
-            my $NP_max_read_length_tmp = '0';
-            my @haplo_tmp = split /_split_/, $haps_tmp;
-            my $haplo_tmp2 = $haplo_tmp[0];
-            my $chr_tmp = $haplo_tmp[1];
-            my $tmp_hap = $haps{$haps_tmp};
-            delete $haps{$haps_tmp};
-            
-            $chr_tmp =~ tr/: /__/;
-            
-            my $OUTPUT_NP;
-            my $output_NP_tmp = $output."Nanopore_to_merge_".$project."_".$chr_tmp."_".$haplo_tmp2.".fasta";
-            open($OUTPUT_NP, ">" .$output_NP_tmp) or die "Can't open Nanopore file $output_NP_tmp, $!\n";
-            
-            my $NP_coverage_tmp = $NP_coverage;   
-            
-            if ($haplo_tmp2 eq "1")
+            foreach my $haps_tmp (sort keys %haps)
             {
-                $NP_coverage_tmp = $NP_coverage1;
-            }
-            if ($haplo_tmp2 eq "2")
-            {
-                $NP_coverage_tmp = $NP_coverage2;
-            }
-
-            if ($seq_depth ne "")
-            {
-                my $pos_tmp = substr $seq_done1, 0, -2;
-                if (exists($seq_depth{$chromosome}{$pos_tmp}))
+                my @haplo_tmp = split /_split_/, $haps_tmp;
+                my $haplo_tmp2 = $haplo_tmp[0];
+                my $chr_tmp = $haplo_tmp[1];
+                $chr_tmp =~ tr/: /__/;
+                my $output_NP_tmp = $output."Nanopore_to_merge_".$project."_".$chr_tmp."_".$haplo_tmp2.".fasta";
+                if (exists($merge_command{$haplo_tmp2}))
                 {
-                    $NP_coverage_tmp = $seq_depth{$chromosome}{$pos_tmp};
-                }
-                elsif ($seq_done1 < 100)
-                {
-                    $NP_coverage_tmp = $seq_depth{$chromosome}{'1'};
+                    my $tmp = $merge_command{$haplo_tmp2}." ".$output_NP_tmp;
+                    $merge_command{$haplo_tmp2} = $tmp;
+                    #print $tmp." TEST\n";
                 }
                 else
                 {
-                    $NP_coverage_tmp = $NP_coverage;
-                    print $chromosome." CHR\n";
-                    print $seq_done1." NOT_POS\n";
+                    $merge_command{$haplo_tmp2} = $output_NP_tmp;
                 }
             }
-            my %NP_seq_length;
-            undef %NP_seq_length;
             
-            while (length($tmp_hap) > $NP_range_low)
-            {                
-                my $o = '0';
-                my $d = '0';    
-                my $count_seqs = keys %NP_seq_length;
-
-                while ($o <= $NP_coverage_tmp-$count_seqs)
+            foreach my $haps_tmp (sort keys %haps)
+            {
+                my $pid = $pm->start and next;
+                
+                my $NP_read_count = '0';
+                my $NP_total_length_tmp = '0';
+                my $NP_min_read_length_tmp = '10000000000000000';
+                my $NP_max_read_length_tmp = '0';
+                my @haplo_tmp = split /_split_/, $haps_tmp;
+                my $haplo_tmp2 = $haplo_tmp[0];
+                my $chr_tmp = $haplo_tmp[1];
+                my $tmp_hap = $haps{$haps_tmp};
+                delete $haps{$haps_tmp};
+                
+                $chr_tmp =~ tr/: /__/;
+                
+                my $OUTPUT_NP;
+                my $output_NP_tmp = $output."Nanopore_to_merge_".$project."_".$chr_tmp."_".$haplo_tmp2.".fasta";
+                open($OUTPUT_NP, ">" .$output_NP_tmp) or die "Can't open Nanopore file $output_NP_tmp, $!\n";
+                
+                my $NP_coverage_tmp = $NP_coverage;   
+                
+                if ($haplo_tmp2 eq "1")
                 {
-                    $NP_read_count++;
-NP_LENGTH0:      
-                    my $random_NP_length = '0';
-                    if (exists($NP_extra_long_reads{$NP_read_count}))
+                    $NP_coverage_tmp = $NP_coverage1;
+                }
+                if ($haplo_tmp2 eq "2")
+                {
+                    $NP_coverage_tmp = $NP_coverage2;
+                }
+    
+                if ($seq_depth ne "")
+                {
+                    my $pos_tmp = substr $seq_done1, 0, -2;
+                    if (exists($seq_depth{$chromosome}{$pos_tmp}))
                     {
-                         my $range_tmp = $NP_range_high-($NP_average*2);
-                         $random_NP_length = int(rand($range_tmp)) + ($NP_average*2);
+                        $NP_coverage_tmp = $seq_depth{$chromosome}{$pos_tmp};
+                    }
+                    elsif ($seq_done1 < 100)
+                    {
+                        $NP_coverage_tmp = $seq_depth{$chromosome}{'1'};
                     }
                     else
                     {
-                        my $j = (($NP_average*2)+400)/3;
-                        my $t=0;
-                        $t+=rand() for(1..3);
-                        $random_NP_length = int($t*$j+1);
+                        $NP_coverage_tmp = $NP_coverage;
+                        print $chromosome." CHR\n";
+                        print $seq_done1." NOT_POS\n";
                     }
-                    if ($random_NP_length < $NP_min_read_length_tmp)
-                    {
-                       $NP_min_read_length_tmp = $random_NP_length; 
-                    }
-                    if ($random_NP_length > $NP_max_read_length_tmp)
-                    {
-                        $NP_max_read_length_tmp = $random_NP_length;
-                    }
-                    $NP_total_length_tmp += $random_NP_length;
-        
-                    if (exists($NP_seq_length{$random_NP_length+$shortest_seq1}))
-                    {
-                        goto NP_LENGTH0;
-                    }
-                    my $chance_sense = int(rand(2));
-                    my $seq_tmp = "";
-                    if ($chance_sense eq '0')
-                    {
-                        $seq_tmp = reverse(substr $tmp_hap, 0, $random_NP_length-$start_read_lq);
-                        $seq_tmp =~ tr/ACTG/TGAC/;
-                    }
-                    else
-                    {
-                        $seq_tmp = substr $tmp_hap, 0, $random_NP_length-$start_read_lq;
-                    }
-                    my $seq_tmp2 = $seq_tmp;
-                    my $length_read = length($seq_tmp2);
+                }
+                my %NP_seq_length;
+                undef %NP_seq_length;
+                
+                while (length($tmp_hap) > $NP_range_low)
+                {                
+                    my $o = '0';
+                    my $d = '0';    
+                    my $count_seqs = keys %NP_seq_length;
     
-#input sequencing errors---------------------------------------------------------------------------------------------------------------------              
-    
-                    my $length_tmp = length($seq_tmp);                      
-                    my $j = 1.2;
-                    my $t= rand(1.5);
-                    $t+= 1;
-                    my $random_error_rate = int(($NP_error_rate/($t*$j))+$NP_error_rate-($NP_error_rate/2.2));
-                    my $extra_error = rand(($NP_error_rate/12)/100);
-    
-                    my $NP_deletion_rate = $extra_error+($random_error_rate*($del_percentage/($del_percentage+$ins_percentage+$mismatch_percentage)))/100;
-                    my $NP_insertion_rate = $extra_error+($random_error_rate*($ins_percentage/($del_percentage+$ins_percentage+$mismatch_percentage)))/100;
-                    my $NP_mismatch_rate = $extra_error+($random_error_rate*($mismatch_percentage/($del_percentage+$ins_percentage+$mismatch_percentage)))/100;
-                    
-                    if ($NP_error_rate eq '0')
+                    while ($o <= $NP_coverage_tmp-$count_seqs)
                     {
-                        $NP_deletion_rate = '0';
-                        $NP_insertion_rate = '0';
-                        $NP_mismatch_rate = '0';
-                    }
-                                          
-#mismatch-----------------------------------------------------------------------------------------------          
-                    my $mismatch_nuc_count = int($length_tmp*$NP_mismatch_rate);
-                    my $f = '0';
-                    my %mismatches;
-                    undef %mismatches;
-    
-                    while ($f < $mismatch_nuc_count)
-                    {                           
-                        my $pos = int(rand($length_read-3));
-                        if (exists($mismatches{$pos}))
+                        $NP_read_count++;
+    NP_LENGTH0:      
+                        my $random_NP_length = '0';
+                        if (exists($NP_extra_long_reads{$NP_read_count}))
                         {
-                            next;
-                        }
-                        if (exists($mismatches{$pos+1}))
-                        {
-                            next;
-                        }
-                        if (exists($mismatches{$pos-1}))
-                        {
-                            next;
-                        }
-                 
-                        my $nuc = substr $seq_tmp2, $pos, 1;
-                        my $nuc_prev = substr $seq_tmp2, $pos-1, 1;
-                        my $nuc_next = substr $seq_tmp2, $pos+1, 1;
-                        my $mismatch_nuc = "";
-                        my $no_extra = "";
-                                
-                        my $three_nuc = $nuc_prev.$nuc.$nuc_next;
-                        my $chance = '1';
-                        my $random_chance = rand(1);
-                   
-                        if (exists($NP_error_profile_mismatch2{$three_nuc}))
-                        {
-                            $chance = ($NP_error_profile_mismatch2{$three_nuc}*$NP_mismatch_multi2)/100;     
-                        }
-                        if ($random_chance > $chance)
-                        {
-                            next;
-                        }
-                     
-                        my $four_nuc = $nuc_prev.$nuc."A".$nuc_next;
-                        if (exists($NP_error_profile_mismatch{$four_nuc}))
-                        {
-                            my $random_chance2 = rand(1);                              
-                            my $chance2 = $NP_error_profile_mismatch{$four_nuc}/100;
-                            if ($random_chance2 <= $chance2 && $nuc ne "A")
-                            {
-                               $mismatch_nuc = "A"; 
-                            }
-                            else
-                            {
-                                $four_nuc = $nuc_prev.$nuc."C".$nuc_next;
-                                my $chance3 = $NP_error_profile_mismatch{$four_nuc}/100;
-                                if ($random_chance2 <= $chance2+$chance3 && $nuc ne "C")
-                                {
-                                   $mismatch_nuc = "C"; 
-                                }
-                                else
-                                {
-                                    $four_nuc = $nuc_prev.$nuc."T".$nuc_next;
-                                    my $chance4 = $NP_error_profile_mismatch{$four_nuc}/100;
-                                    if ($random_chance2 <= $chance2+$chance3+$chance4 && $nuc ne "T")
-                                    {
-                                       $mismatch_nuc = "T";
-                                    }
-                                    elsif ($nuc ne "G")
-                                    {
-                                        $mismatch_nuc = "G";
-                                    }
-                                }
-                                $mismatches{$pos} = undef;
-                            }
+                             my $range_tmp = $NP_range_high-($NP_average*2);
+                             $random_NP_length = int(rand($range_tmp)) + ($NP_average*2);
                         }
                         else
                         {
-                            my $range = int(rand(4));
-                            $mismatch_nuc = $nucs[$range];
-                            $mismatches{$pos} = undef;
-                            $no_extra = "yes";
+                            my $j = (($NP_average*2)+400)/3;
+                            my $t=0;
+                            $t+=rand() for(1..3);
+                            $random_NP_length = int($t*$j+1);
                         }
-                    
-                        my $q = '1';
-                        
-                        while ($pos+$q < $length_tmp && $no_extra eq "")
+                        if ($random_NP_length < $NP_min_read_length_tmp)
                         {
-                            $nuc = $nuc_next;
-                            $nuc_next = substr $seq_tmp2, $pos+1+$q, 1;
-                            $nuc_prev = $nuc;
-                            
-                            $three_nuc = $nuc_prev.$nuc.$nuc_next;
-                            $random_chance = rand(1);
-                            
-                            if (exists($NP_error_profile_mismatch2{$three_nuc}))
-                            {
-                                $chance = ($NP_error_profile_mismatch2{$three_nuc}*$NP_mismatch_multi2)/100;
-                            }
-                            if ($random_chance > $chance)
-                            {
-                                last;
-                            }
-                            
-                            my $random_chance2 = rand(1);
-                            my $four_nuc = $nuc_prev.$nuc."A".$nuc_next;
-                            my $chance2 = $NP_error_profile_mismatch{$four_nuc}/100;
-                            if ($random_chance2 <= $chance2 && $nuc ne "A")
-                            {
-                               $mismatch_nuc .= "A"; 
-                            }
-                            else
-                            {
-                                $four_nuc = $nuc_prev.$nuc."C".$nuc_next;
-                                my $chance3 = $NP_error_profile_mismatch{$four_nuc}/100;
-                                if ($random_chance2 <= $chance2+$chance3 && $nuc ne "C")
-                                {
-                                   $mismatch_nuc .= "C"; 
-                                }
-                                else
-                                {
-                                    $four_nuc = $nuc_prev.$nuc."T".$nuc_next;
-                                    my $chance4 = $NP_error_profile_mismatch{$four_nuc}/100;
-                                    if ($random_chance2 <= $chance2+$chance3+$chance4 && $nuc ne "T")
-                                    {
-                                       $mismatch_nuc .= "T";
-                                    }
-                                    elsif ($nuc ne "G")
-                                    {
-                                        $mismatch_nuc .= "G";
-                                    }
-                                }
-                                $mismatches{$pos+$q} = undef;
-                            }
-                            $q++;
-                        }                     
-                                                   
-                        if ($mismatch_nuc ne "")
-                        {
-                            $f += length($mismatch_nuc);                         
-                            substr $seq_tmp, $pos, length($mismatch_nuc), $mismatch_nuc;
-                        }                         
-                    }
-#indel------------------------------------------------------------------------------------------------------           
-                    my %indels;
-                    undef %indels;
-                    my $delete_nuc_count = int($length_tmp*$NP_deletion_rate);
-                    my $s = '0';
-    
-                    while ($s < $delete_nuc_count)
-                    {
-                        my $pos = int(rand($length_read-$delete_nuc_count));
-                        if (exists($mismatches{$pos}))
-                        {
-                            next;
+                           $NP_min_read_length_tmp = $random_NP_length; 
                         }
-                        my $three_nuc = substr $seq_tmp2, $pos-2, 3;
+                        if ($random_NP_length > $NP_max_read_length_tmp)
+                        {
+                            $NP_max_read_length_tmp = $random_NP_length;
+                        }
+                        $NP_total_length_tmp += $random_NP_length;
+            
+                        if (exists($NP_seq_length{$random_NP_length+$shortest_seq1}))
+                        {
+                            goto NP_LENGTH0;
+                        }
+                        my $chance_sense = int(rand(2));
+                        my $seq_tmp = "";
+                        if ($chance_sense eq '0')
+                        {
+                            $seq_tmp = reverse(substr $tmp_hap, 0, $random_NP_length-$start_read_lq);
+                            $seq_tmp =~ tr/ACTG/TGAC/;
+                        }
+                        else
+                        {
+                            $seq_tmp = substr $tmp_hap, 0, $random_NP_length-$start_read_lq;
+                        }
+                        my $seq_tmp2 = $seq_tmp;
+                        my $length_read = length($seq_tmp2);
+        
+    #input sequencing errors---------------------------------------------------------------------------------------------------------------------              
+        
+                        my $length_tmp = length($seq_tmp);                      
+                        my $j = 1.2;
+                        my $t= rand(1.5);
+                        $t+= 1;
+                        my $random_error_rate = int(($NP_error_rate/($t*$j))+$NP_error_rate-($NP_error_rate/2.2));
+                        my $extra_error = rand(($NP_error_rate/12)/100);
+        
+                        my $NP_deletion_rate = $extra_error+($random_error_rate*($del_percentage/($del_percentage+$ins_percentage+$mismatch_percentage)))/100;
+                        my $NP_insertion_rate = $extra_error+($random_error_rate*($ins_percentage/($del_percentage+$ins_percentage+$mismatch_percentage)))/100;
+                        my $NP_mismatch_rate = $extra_error+($random_error_rate*($mismatch_percentage/($del_percentage+$ins_percentage+$mismatch_percentage)))/100;
                         
-                        if (exists($NP_error_profile_del{$three_nuc}))
-                        {                   
-                            my $random_chance = rand(1);
-                            if ($random_chance <= (($NP_error_profile_del{$three_nuc}*$NP_del_multi)/100))
-                            {       
-                            }
-                            else
+                        if ($NP_error_rate eq '0')
+                        {
+                            $NP_deletion_rate = '0';
+                            $NP_insertion_rate = '0';
+                            $NP_mismatch_rate = '0';
+                        }
+                                              
+    #mismatch-----------------------------------------------------------------------------------------------          
+                        my $mismatch_nuc_count = int($length_tmp*$NP_mismatch_rate);
+                        my $f = '0';
+                        my %mismatches;
+                        undef %mismatches;
+        
+                        while ($f < $mismatch_nuc_count)
+                        {                           
+                            my $pos = int(rand($length_read-3));
+                            if (exists($mismatches{$pos}))
                             {
                                 next;
                             }
+                            if (exists($mismatches{$pos+1}))
+                            {
+                                next;
+                            }
+                            if (exists($mismatches{$pos-1}))
+                            {
+                                next;
+                            }
+                     
+                            my $nuc = substr $seq_tmp2, $pos, 1;
+                            my $nuc_prev = substr $seq_tmp2, $pos-1, 1;
+                            my $nuc_next = substr $seq_tmp2, $pos+1, 1;
+                            my $mismatch_nuc = "";
+                            my $no_extra = "";
+                                    
+                            my $three_nuc = $nuc_prev.$nuc.$nuc_next;
+                            my $chance = '1';
+                            my $random_chance = rand(1);
+                       
+                            if (exists($NP_error_profile_mismatch2{$three_nuc}))
+                            {
+                                $chance = ($NP_error_profile_mismatch2{$three_nuc}*$NP_mismatch_multi2)/100;     
+                            }
+                            if ($random_chance > $chance)
+                            {
+                                next;
+                            }
+                         
+                            my $four_nuc = $nuc_prev.$nuc."A".$nuc_next;
+                            if (exists($NP_error_profile_mismatch{$four_nuc}))
+                            {
+                                my $random_chance2 = rand(1);                              
+                                my $chance2 = $NP_error_profile_mismatch{$four_nuc}/100;
+                                if ($random_chance2 <= $chance2 && $nuc ne "A")
+                                {
+                                   $mismatch_nuc = "A"; 
+                                }
+                                else
+                                {
+                                    $four_nuc = $nuc_prev.$nuc."C".$nuc_next;
+                                    my $chance3 = $NP_error_profile_mismatch{$four_nuc}/100;
+                                    if ($random_chance2 <= $chance2+$chance3 && $nuc ne "C")
+                                    {
+                                       $mismatch_nuc = "C"; 
+                                    }
+                                    else
+                                    {
+                                        $four_nuc = $nuc_prev.$nuc."T".$nuc_next;
+                                        my $chance4 = $NP_error_profile_mismatch{$four_nuc}/100;
+                                        if ($random_chance2 <= $chance2+$chance3+$chance4 && $nuc ne "T")
+                                        {
+                                           $mismatch_nuc = "T";
+                                        }
+                                        elsif ($nuc ne "G")
+                                        {
+                                            $mismatch_nuc = "G";
+                                        }
+                                    }
+                                    $mismatches{$pos} = undef;
+                                }
+                            }
+                            else
+                            {
+                                my $range = int(rand(4));
+                                $mismatch_nuc = $nucs[$range];
+                                $mismatches{$pos} = undef;
+                                $no_extra = "yes";
+                            }
+                        
+                            my $q = '1';
+                            
+                            while ($pos+$q < $length_tmp && $no_extra eq "")
+                            {
+                                $nuc = $nuc_next;
+                                $nuc_next = substr $seq_tmp2, $pos+1+$q, 1;
+                                $nuc_prev = $nuc;
+                                
+                                $three_nuc = $nuc_prev.$nuc.$nuc_next;
+                                $random_chance = rand(1);
+                                
+                                if (exists($NP_error_profile_mismatch2{$three_nuc}))
+                                {
+                                    $chance = ($NP_error_profile_mismatch2{$three_nuc}*$NP_mismatch_multi2)/100;
+                                }
+                                if ($random_chance > $chance)
+                                {
+                                    last;
+                                }
+                                
+                                my $random_chance2 = rand(1);
+                                my $four_nuc = $nuc_prev.$nuc."A".$nuc_next;
+                                my $chance2 = $NP_error_profile_mismatch{$four_nuc}/100;
+                                if ($random_chance2 <= $chance2 && $nuc ne "A")
+                                {
+                                   $mismatch_nuc .= "A"; 
+                                }
+                                else
+                                {
+                                    $four_nuc = $nuc_prev.$nuc."C".$nuc_next;
+                                    my $chance3 = $NP_error_profile_mismatch{$four_nuc}/100;
+                                    if ($random_chance2 <= $chance2+$chance3 && $nuc ne "C")
+                                    {
+                                       $mismatch_nuc .= "C"; 
+                                    }
+                                    else
+                                    {
+                                        $four_nuc = $nuc_prev.$nuc."T".$nuc_next;
+                                        my $chance4 = $NP_error_profile_mismatch{$four_nuc}/100;
+                                        if ($random_chance2 <= $chance2+$chance3+$chance4 && $nuc ne "T")
+                                        {
+                                           $mismatch_nuc .= "T";
+                                        }
+                                        elsif ($nuc ne "G")
+                                        {
+                                            $mismatch_nuc .= "G";
+                                        }
+                                    }
+                                    $mismatches{$pos+$q} = undef;
+                                }
+                                $q++;
+                            }                     
+                                                       
+                            if ($mismatch_nuc ne "")
+                            {
+                                $f += length($mismatch_nuc);                         
+                                substr $seq_tmp, $pos, length($mismatch_nuc), $mismatch_nuc;
+                            }                         
                         }
-    
-                        my $extra_del = rand(1);
-                        my $length_tmp2 = '1';
-                        my $threshold = 0.7;
-                        if (exists ($NP_del_length{$length_tmp2}))
+    #indel------------------------------------------------------------------------------------------------------           
+                        my %indels;
+                        undef %indels;
+                        my $delete_nuc_count = int($length_tmp*$NP_deletion_rate);
+                        my $s = '0';
+        
+                        while ($s < $delete_nuc_count)
                         {
-                            $threshold = $NP_del_length{$length_tmp2};
-                        }
-                        while ($extra_del > $threshold && $pos < length($seq_tmp2)+$length_tmp2 && $length_tmp2 < 30)
-                        {
-                            $length_tmp2++;
-                            $extra_del = rand(1);
+                            my $pos = int(rand($length_read-$delete_nuc_count));
+                            if (exists($mismatches{$pos}))
+                            {
+                                next;
+                            }
+                            my $three_nuc = substr $seq_tmp2, $pos-2, 3;
+                            
+                            if (exists($NP_error_profile_del{$three_nuc}))
+                            {                   
+                                my $random_chance = rand(1);
+                                if ($random_chance <= (($NP_error_profile_del{$three_nuc}*$NP_del_multi)/100))
+                                {       
+                                }
+                                else
+                                {
+                                    next;
+                                }
+                            }
+        
+                            my $extra_del = rand(1);
+                            my $length_tmp2 = '1';
+                            my $threshold = 0.7;
                             if (exists ($NP_del_length{$length_tmp2}))
                             {
                                 $threshold = $NP_del_length{$length_tmp2};
                             }
+                            while ($extra_del > $threshold && $pos < length($seq_tmp2)+$length_tmp2 && $length_tmp2 < 30)
+                            {
+                                $length_tmp2++;
+                                $extra_del = rand(1);
+                                if (exists ($NP_del_length{$length_tmp2}))
+                                {
+                                    $threshold = $NP_del_length{$length_tmp2};
+                                }
+                                $s++;
+                            }
+                            $indels{$pos-1} = $length_tmp2;
                             $s++;
                         }
-                        $indels{$pos-1} = $length_tmp2;
-                        $s++;
-                    }
-    
-                    my $r = '0';
-    
-                    my $insert_nuc_count = int($length_tmp*$NP_insertion_rate);
-                    while ($r < $insert_nuc_count)
-                    {                                          
-                        my $pos = rand($length_read);
-                        if (exists($mismatches{$pos}))
-                        {
-                            next;
-                        }
-                        my $nuc_prev = substr $seq_tmp2, $pos, 1;
-                        my $nuc_next = substr $seq_tmp2, $pos+1, 1;
-                        my $insert_seq = "";
-                        
-                        
-                        my $two_nuc = $nuc_prev.$nuc_next;
-                        my $chance = '1';
-                        my $random_chance = rand(1);
-                    
-                        if (exists($NP_error_profile_ins2{$two_nuc}))
-                        {
-                            $chance = ($NP_error_profile_ins2{$two_nuc}*$NP_ins_multi2)/100;
-                        }
-                        if ($random_chance > $chance)
-                        {
-                            next;
-                        }
-                        elsif (exists($NP_error_profile_ins2{$two_nuc}))
-                        {
-                            my $random_chance2 = rand(1);
-                            my $three_nuc = $nuc_prev."A".$nuc_next;
-                            my $three_nuc2 = $nuc_prev."C".$nuc_next;
-                            my $three_nuc3 = $nuc_prev."T".$nuc_next;
-                            my $three_nuc4 = $nuc_prev."G".$nuc_next;
-                            my $chance2 = ($NP_error_profile_ins{$three_nuc})/
-                            ($NP_error_profile_ins{$three_nuc}+$NP_error_profile_ins{$three_nuc2}+$NP_error_profile_ins{$three_nuc3}+$NP_error_profile_ins{$three_nuc4});
-    
-                            if ($random_chance2 <= $chance2)
+        
+                        my $r = '0';
+        
+                        my $insert_nuc_count = int($length_tmp*$NP_insertion_rate);
+                        while ($r < $insert_nuc_count)
+                        {                                          
+                            my $pos = rand($length_read);
+                            if (exists($mismatches{$pos}))
                             {
-                               $insert_seq = "A"; 
+                                next;
                             }
-                            else
+                            my $nuc_prev = substr $seq_tmp2, $pos, 1;
+                            my $nuc_next = substr $seq_tmp2, $pos+1, 1;
+                            my $insert_seq = "";
+                            
+                            
+                            my $two_nuc = $nuc_prev.$nuc_next;
+                            my $chance = '1';
+                            my $random_chance = rand(1);
+                        
+                            if (exists($NP_error_profile_ins2{$two_nuc}))
                             {
-                                my $chance3 = ($NP_error_profile_ins{$three_nuc2})/
-                            ($NP_error_profile_ins{$three_nuc}+$NP_error_profile_ins{$three_nuc2}+$NP_error_profile_ins{$three_nuc3}+$NP_error_profile_ins{$three_nuc4});
-                                if ($random_chance2 <= $chance2+$chance3)
+                                $chance = ($NP_error_profile_ins2{$two_nuc}*$NP_ins_multi2)/100;
+                            }
+                            if ($random_chance > $chance)
+                            {
+                                next;
+                            }
+                            elsif (exists($NP_error_profile_ins2{$two_nuc}))
+                            {
+                                my $random_chance2 = rand(1);
+                                my $three_nuc = $nuc_prev."A".$nuc_next;
+                                my $three_nuc2 = $nuc_prev."C".$nuc_next;
+                                my $three_nuc3 = $nuc_prev."T".$nuc_next;
+                                my $three_nuc4 = $nuc_prev."G".$nuc_next;
+                                my $chance2 = ($NP_error_profile_ins{$three_nuc})/
+                                ($NP_error_profile_ins{$three_nuc}+$NP_error_profile_ins{$three_nuc2}+$NP_error_profile_ins{$three_nuc3}+$NP_error_profile_ins{$three_nuc4});
+        
+                                if ($random_chance2 <= $chance2)
                                 {
-                                   $insert_seq = "C"; 
+                                   $insert_seq = "A"; 
                                 }
                                 else
                                 {
-                                    my $chance4 = ($NP_error_profile_ins{$three_nuc3})/
-                            ($NP_error_profile_ins{$three_nuc}+$NP_error_profile_ins{$three_nuc2}+$NP_error_profile_ins{$three_nuc3}+$NP_error_profile_ins{$three_nuc4});
-                                    if ($random_chance2 <= $chance2+$chance3+$chance4)
+                                    my $chance3 = ($NP_error_profile_ins{$three_nuc2})/
+                                ($NP_error_profile_ins{$three_nuc}+$NP_error_profile_ins{$three_nuc2}+$NP_error_profile_ins{$three_nuc3}+$NP_error_profile_ins{$three_nuc4});
+                                    if ($random_chance2 <= $chance2+$chance3)
                                     {
-                                       $insert_seq = "T";
+                                       $insert_seq = "C"; 
                                     }
                                     else
                                     {
-                                        $insert_seq = "G";
+                                        my $chance4 = ($NP_error_profile_ins{$three_nuc3})/
+                                ($NP_error_profile_ins{$three_nuc}+$NP_error_profile_ins{$three_nuc2}+$NP_error_profile_ins{$three_nuc3}+$NP_error_profile_ins{$three_nuc4});
+                                        if ($random_chance2 <= $chance2+$chance3+$chance4)
+                                        {
+                                           $insert_seq = "T";
+                                        }
+                                        else
+                                        {
+                                            $insert_seq = "G";
+                                        }
                                     }
                                 }
                             }
-                        }
-                        else
-                        {
-                            my $range = int(rand(4));
-                            $insert_seq = $nucs[$range];
-                            $mismatches{$pos} = undef;
-                        }
-                        
-                        my $extra_ins = rand(1);
-                        my $threshold = 0.8;
-                        if (exists ($NP_ins_length{length($insert_seq)}))
-                        {
-                            $threshold = $NP_ins_length{length($insert_seq)};
-                        }
-                        while ($extra_ins > $threshold && $pos < length($seq_tmp2))
-                        {
-                            my $random_nuc2 = int(rand(4));
-                            $insert_seq .= $nucs[$random_nuc2-1];
-                            $extra_ins = rand(1);
+                            else
+                            {
+                                my $range = int(rand(4));
+                                $insert_seq = $nucs[$range];
+                                $mismatches{$pos} = undef;
+                            }
+                            
+                            my $extra_ins = rand(1);
+                            my $threshold = 0.8;
                             if (exists ($NP_ins_length{length($insert_seq)}))
                             {
                                 $threshold = $NP_ins_length{length($insert_seq)};
                             }
-                            $r++;
+                            while ($extra_ins > $threshold && $pos < length($seq_tmp2))
+                            {
+                                my $random_nuc2 = int(rand(4));
+                                $insert_seq .= $nucs[$random_nuc2-1];
+                                $extra_ins = rand(1);
+                                if (exists ($NP_ins_length{length($insert_seq)}))
+                                {
+                                    $threshold = $NP_ins_length{length($insert_seq)};
+                                }
+                                $r++;
+                            }
+                            $indels{$pos} = $insert_seq;
+                            $r++;    
                         }
-                        $indels{$pos} = $insert_seq;
-                        $r++;    
-                    }
-#-----------------------------------------------------------------------------------------------------------                                   
-                    
-                    foreach my $indel_tmp (sort {$b <=> $a} keys %indels)
-                    {                        
-                        if ($indels{$indel_tmp} > 0)
-                        {
-                            substr $seq_tmp, $indel_tmp, $indels{$indel_tmp}, "";
+    #-----------------------------------------------------------------------------------------------------------                                   
+                        
+                        foreach my $indel_tmp (sort {$b <=> $a} keys %indels)
+                        {                        
+                            if ($indels{$indel_tmp} > 0)
+                            {
+                                substr $seq_tmp, $indel_tmp, $indels{$indel_tmp}, "";
+                            }
+                            else
+                            {
+                                my $one = substr $seq_tmp, 0, $indel_tmp;
+                                my $two = substr $seq_tmp, $indel_tmp;
+                                $seq_tmp = $one.$indels{$indel_tmp}.$two;
+                            }
                         }
-                        else
-                        {
-                            my $one = substr $seq_tmp, 0, $indel_tmp;
-                            my $two = substr $seq_tmp, $indel_tmp;
-                            $seq_tmp = $one.$indels{$indel_tmp}.$two;
-                        }
-                    }
-    
-                    print $OUTPUT_NP ">".$project."_".$NP_read_count."_length=".length($seq_tmp)."_HAP".$haps_tmp."\n";
-                    print $OUTPUT_NP $seq_tmp."\n";
-    
-                    $NP_seq_length{$shortest_seq1+$random_NP_length} = undef;
-                    $o++;
-                }
-                
-                if ($d eq '0')
-                {
-                    foreach my $seq_length (sort {$a <=> $b} keys %NP_seq_length)
-                    {           
-                        $shortest_seq1 = $seq_length;
-                        delete $NP_seq_length{$seq_length};           
-                        $d++;
-                        last;
-                    }
-                }
-                    
-                my $shortest_seq_tmp = '0';
-    
-                $shortest_seq_tmp = $shortest_seq1-$seq_done1;
-                $seq_done1 += $shortest_seq_tmp;
-                
-                substr $tmp_hap, 0, $shortest_seq_tmp, "";
-            }
-            close $OUTPUT_NP;
-            #print $NP_read_count." READ_COUNT\n";
-            my %hash_tmp;
-            $hash_tmp{'1'} = $NP_read_count;
-            $hash_tmp{'2'} = $NP_total_length_tmp;
-            $hash_tmp{'3'} = $NP_max_read_length_tmp;
-            $hash_tmp{'4'} = $NP_min_read_length_tmp;
-            $pm->finish(0, \%hash_tmp);
-        }
         
+                        print $OUTPUT_NP ">".$project."_".$NP_read_count."_length=".length($seq_tmp)."_HAP".$haps_tmp."\n";
+                        print $OUTPUT_NP $seq_tmp."\n";
+        
+                        $NP_seq_length{$shortest_seq1+$random_NP_length} = undef;
+                        $o++;
+                    }
+                
+                    if ($d eq '0')
+                    {
+                        foreach my $seq_length (sort {$a <=> $b} keys %NP_seq_length)
+                        {           
+                            $shortest_seq1 = $seq_length;
+                            delete $NP_seq_length{$seq_length};           
+                            $d++;
+                            last;
+                        }
+                    }
+                        
+                    my $shortest_seq_tmp = '0';
+        
+                    $shortest_seq_tmp = $shortest_seq1-$seq_done1;
+                    $seq_done1 += $shortest_seq_tmp;
+                    
+                    substr $tmp_hap, 0, $shortest_seq_tmp, "";
+                }
+                close $OUTPUT_NP;
+                #print $NP_read_count." READ_COUNT\n";
+                my %hash_tmp;
+                $hash_tmp{'1'} = $NP_read_count;
+                $hash_tmp{'2'} = $NP_total_length_tmp;
+                $hash_tmp{'3'} = $NP_max_read_length_tmp;
+                $hash_tmp{'4'} = $NP_min_read_length_tmp;
+                $pm->finish(0, \%hash_tmp);
+            }
+        }
 #--------------------------------------------------------------------------------------------------------------------------        
 #--------------------------------------------------------------------------------------------------------------------------       
 #--------------------------------------------------------------------------------------------------------------------------
@@ -3732,478 +3734,482 @@ NEW_CONTIG:
             $haps{"2_split_".$chromosome} = $tmp_hap2;
             $tmp_hap2 = "";
         }
-        foreach my $haps_tmp (sort keys %haps)
-        {
-            my @haplo_tmp = split /_split_/, $haps_tmp;
-            my $haplo_tmp2 = $haplo_tmp[0];
-            my $chr_tmp = $haplo_tmp[1];
-            $chr_tmp =~ tr/: /__/;
-            my $output_NP_tmp = $output."Nanopore_to_merge_".$project."_".$chr_tmp."_".$haplo_tmp2.".fasta";
-            if (exists($merge_command{$haplo_tmp2}))
-            {
-                my $tmp = $merge_command{$haplo_tmp2}." ".$output_NP_tmp;
-                $merge_command{$haplo_tmp2} = $tmp;
-            }
-            else
-            {
-                $merge_command{$haplo_tmp2} = $output_NP_tmp;
-            }
-        }
+        
 #Simulate Nanopore reads START PARALLEL LOOP--------------------------------------------------------------------------------------------------------
-
-        foreach my $haps_tmp (sort keys %haps)
+        
+        if ($NP_coverage > 0)
         {
-            my $pid = $pm->start and next;
-
-            my $NP_read_count = '0';
-            my $NP_total_length_tmp = '0';
-            my $NP_min_read_length_tmp = '10000000000000000';
-            my $NP_max_read_length_tmp = '0';
-            my @haplo_tmp = split /_split_/, $haps_tmp;
-            my $haplo_tmp2 = $haplo_tmp[0];
-            my $chr_tmp = $haplo_tmp[1];
-            my $tmp_hap = $haps{$haps_tmp};
-            delete $haps{$haps_tmp};
-            
-            $chr_tmp =~ tr/: /__/; 
-            
-            my $OUTPUT_NP;
-            my $output_NP_tmp = $output."Nanopore_to_merge_".$project."_".$chr_tmp."_".$haplo_tmp2.".fasta";
-            open($OUTPUT_NP, ">" .$output_NP_tmp) or die "Can't open Nanopore file $output_NP_tmp, $!\n";
-            
-            my $NP_coverage_tmp = $NP_coverage;   
-            
-            if ($haplo_tmp2 eq "1")
+            foreach my $haps_tmp (sort keys %haps)
             {
-                $NP_coverage_tmp = $NP_coverage1;
-            }
-            if ($haplo_tmp2 eq "2")
-            {
-                $NP_coverage_tmp = $NP_coverage2;
-            }       
-
-            if ($seq_depth ne "")
-            {
-                my $pos_tmp = substr $seq_done1, 0, -2;
-                if (exists($seq_depth{$chromosome}{$pos_tmp}))
+                my @haplo_tmp = split /_split_/, $haps_tmp;
+                my $haplo_tmp2 = $haplo_tmp[0];
+                my $chr_tmp = $haplo_tmp[1];
+                $chr_tmp =~ tr/: /__/;
+                my $output_NP_tmp = $output."Nanopore_to_merge_".$project."_".$chr_tmp."_".$haplo_tmp2.".fasta";
+                if (exists($merge_command{$haplo_tmp2}))
                 {
-                    $NP_coverage_tmp = $seq_depth{$chromosome}{$pos_tmp};
-                }
-                elsif ($seq_done1 < 100)
-                {
-                    $NP_coverage_tmp = $seq_depth{$chromosome}{'1'};
+                    my $tmp = $merge_command{$haplo_tmp2}." ".$output_NP_tmp;
+                    $merge_command{$haplo_tmp2} = $tmp;
                 }
                 else
                 {
-                    $NP_coverage_tmp = $NP_coverage;
-                    print $chromosome." CHR\n";
-                    print $seq_done1." NOT_POS1\n";
+                    $merge_command{$haplo_tmp2} = $output_NP_tmp;
                 }
             }
-            my %NP_seq_length;
-            undef %NP_seq_length;
-            
-            while (length($tmp_hap) > $NP_range_low)
-            {                
-                my $o = '0';
-                my $d = '0';    
-                my $count_seqs = keys %NP_seq_length;
-
-                while ($o <= $NP_coverage_tmp-$count_seqs)
+    
+            foreach my $haps_tmp (sort keys %haps)
+            {
+                my $pid = $pm->start and next;
+    
+                my $NP_read_count = '0';
+                my $NP_total_length_tmp = '0';
+                my $NP_min_read_length_tmp = '10000000000000000';
+                my $NP_max_read_length_tmp = '0';
+                my @haplo_tmp = split /_split_/, $haps_tmp;
+                my $haplo_tmp2 = $haplo_tmp[0];
+                my $chr_tmp = $haplo_tmp[1];
+                my $tmp_hap = $haps{$haps_tmp};
+                delete $haps{$haps_tmp};
+                
+                $chr_tmp =~ tr/: /__/; 
+                
+                my $OUTPUT_NP;
+                my $output_NP_tmp = $output."Nanopore_to_merge_".$project."_".$chr_tmp."_".$haplo_tmp2.".fasta";
+                open($OUTPUT_NP, ">" .$output_NP_tmp) or die "Can't open Nanopore file $output_NP_tmp, $!\n";
+                
+                my $NP_coverage_tmp = $NP_coverage;   
+                
+                if ($haplo_tmp2 eq "1")
                 {
-                    $NP_read_count++;
-NP_LENGTH:      
-                    my $random_NP_length = '0';
-                    if (exists($NP_extra_long_reads{$NP_read_count}))
+                    $NP_coverage_tmp = $NP_coverage1;
+                }
+                if ($haplo_tmp2 eq "2")
+                {
+                    $NP_coverage_tmp = $NP_coverage2;
+                }       
+    
+                if ($seq_depth ne "")
+                {
+                    my $pos_tmp = substr $seq_done1, 0, -2;
+                    if (exists($seq_depth{$chromosome}{$pos_tmp}))
                     {
-                         my $range_tmp = $NP_range_high-($NP_average*2);
-                         $random_NP_length = int(rand($range_tmp)) + ($NP_average*2);
+                        $NP_coverage_tmp = $seq_depth{$chromosome}{$pos_tmp};
+                    }
+                    elsif ($seq_done1 < 100)
+                    {
+                        $NP_coverage_tmp = $seq_depth{$chromosome}{'1'};
                     }
                     else
                     {
-                        my $j = (($NP_average*2)+400)/3;
-                        my $t=0;
-                        $t+=rand() for(1..3);
-                        $random_NP_length = int($t*$j+1);
+                        $NP_coverage_tmp = $NP_coverage;
+                        print $chromosome." CHR\n";
+                        print $seq_done1." NOT_POS1\n";
                     }
-                    if ($random_NP_length < $NP_min_read_length_tmp)
-                    {
-                       $NP_min_read_length_tmp = $random_NP_length; 
-                    }
-                    if ($random_NP_length > $NP_max_read_length_tmp)
-                    {
-                        $NP_max_read_length_tmp = $random_NP_length;
-                    }
-                    $NP_total_length_tmp += $random_NP_length;
-        
-                    if (exists($NP_seq_length{$random_NP_length+$shortest_seq1}))
-                    {
-                        goto NP_LENGTH;
-                    }
-                    my $chance_sense = int(rand(2));
-                    my $seq_tmp = "";
-                    if ($chance_sense eq '0')
-                    {
-                        $seq_tmp = reverse(substr $tmp_hap, 0, $random_NP_length-$start_read_lq);
-                        $seq_tmp =~ tr/ACTG/TGAC/;
-                    }
-                    else
-                    {
-                        $seq_tmp = substr $tmp_hap, 0, $random_NP_length-$start_read_lq;
-                    }
-                    my $seq_tmp2 = $seq_tmp;
-                    my $length_read = length($seq_tmp2);
+                }
+                my %NP_seq_length;
+                undef %NP_seq_length;
+                
+                while (length($tmp_hap) > $NP_range_low)
+                {                
+                    my $o = '0';
+                    my $d = '0';    
+                    my $count_seqs = keys %NP_seq_length;
     
-#input sequencing errors---------------------------------------------------------------------------------------------------------------------              
-    
-                    my $length_tmp = length($seq_tmp);                      
-                    my $j = 1.2;
-                    my $t= rand(1.5);
-                    $t+= 1;
-                    my $random_error_rate = int(($NP_error_rate/($t*$j))+$NP_error_rate-($NP_error_rate/2.2));
-                    my $extra_error = rand(($NP_error_rate/12)/100);
-    
-                    my $NP_deletion_rate = $extra_error+($random_error_rate*($del_percentage/($del_percentage+$ins_percentage+$mismatch_percentage)))/100;
-                    my $NP_insertion_rate = $extra_error+($random_error_rate*($ins_percentage/($del_percentage+$ins_percentage+$mismatch_percentage)))/100;
-                    my $NP_mismatch_rate = $extra_error+($random_error_rate*($mismatch_percentage/($del_percentage+$ins_percentage+$mismatch_percentage)))/100;
-                    
-                    if ($NP_error_rate eq '0')
+                    while ($o <= $NP_coverage_tmp-$count_seqs)
                     {
-                        $NP_deletion_rate = '0';
-                        $NP_insertion_rate = '0';
-                        $NP_mismatch_rate = '0';
-                    }
-                                          
-#mismatch-----------------------------------------------------------------------------------------------          
-                    my $mismatch_nuc_count = int($length_tmp*$NP_mismatch_rate);
-                    my $f = '0';
-                    my %mismatches;
-                    undef %mismatches;
-    
-                    while ($f < $mismatch_nuc_count)
-                    {                           
-                        my $pos = int(rand($length_read-3));
-                        if (exists($mismatches{$pos}))
+                        $NP_read_count++;
+    NP_LENGTH:      
+                        my $random_NP_length = '0';
+                        if (exists($NP_extra_long_reads{$NP_read_count}))
                         {
-                            next;
-                        }
-                        if (exists($mismatches{$pos+1}))
-                        {
-                            next;
-                        }
-                        if (exists($mismatches{$pos-1}))
-                        {
-                            next;
-                        }
-                 
-                        my $nuc = substr $seq_tmp2, $pos, 1;
-                        my $nuc_prev = substr $seq_tmp2, $pos-1, 1;
-                        my $nuc_next = substr $seq_tmp2, $pos+1, 1;
-                        my $mismatch_nuc = "";
-                        my $no_extra = "";
-                                
-                        my $three_nuc = $nuc_prev.$nuc.$nuc_next;
-                        my $chance = '1';
-                        my $random_chance = rand(1);
-                   
-                        if (exists($NP_error_profile_mismatch2{$three_nuc}))
-                        {
-                            $chance = ($NP_error_profile_mismatch2{$three_nuc}*$NP_mismatch_multi2)/100;     
-                        }
-                        if ($random_chance > $chance)
-                        {
-                            next;
-                        }
-                     
-                        my $four_nuc = $nuc_prev.$nuc."A".$nuc_next;
-                        if (exists($NP_error_profile_mismatch{$four_nuc}))
-                        {
-                            my $random_chance2 = rand(1);                              
-                            my $chance2 = $NP_error_profile_mismatch{$four_nuc}/100;
-                            if ($random_chance2 <= $chance2 && $nuc ne "A")
-                            {
-                               $mismatch_nuc = "A"; 
-                            }
-                            else
-                            {
-                                $four_nuc = $nuc_prev.$nuc."C".$nuc_next;
-                                my $chance3 = $NP_error_profile_mismatch{$four_nuc}/100;
-                                if ($random_chance2 <= $chance2+$chance3 && $nuc ne "C")
-                                {
-                                   $mismatch_nuc = "C"; 
-                                }
-                                else
-                                {
-                                    $four_nuc = $nuc_prev.$nuc."T".$nuc_next;
-                                    my $chance4 = $NP_error_profile_mismatch{$four_nuc}/100;
-                                    if ($random_chance2 <= $chance2+$chance3+$chance4 && $nuc ne "T")
-                                    {
-                                       $mismatch_nuc = "T";
-                                    }
-                                    elsif ($nuc ne "G")
-                                    {
-                                        $mismatch_nuc = "G";
-                                    }
-                                }
-                                $mismatches{$pos} = undef;
-                            }
+                             my $range_tmp = $NP_range_high-($NP_average*2);
+                             $random_NP_length = int(rand($range_tmp)) + ($NP_average*2);
                         }
                         else
                         {
-                            my $range = int(rand(4));
-                            $mismatch_nuc = $nucs[$range];
-                            $mismatches{$pos} = undef;
-                            $no_extra = "yes";
+                            my $j = (($NP_average*2)+400)/3;
+                            my $t=0;
+                            $t+=rand() for(1..3);
+                            $random_NP_length = int($t*$j+1);
                         }
-                    
-                        my $q = '1';
-                        
-                        while ($pos+$q < $length_tmp && $no_extra eq "")
+                        if ($random_NP_length < $NP_min_read_length_tmp)
                         {
-                            $nuc = $nuc_next;
-                            $nuc_next = substr $seq_tmp2, $pos+1+$q, 1;
-                            $nuc_prev = $nuc;
-                            
-                            $three_nuc = $nuc_prev.$nuc.$nuc_next;
-                            $random_chance = rand(1);
-                            
-                            if (exists($NP_error_profile_mismatch2{$three_nuc}))
-                            {
-                                $chance = ($NP_error_profile_mismatch2{$three_nuc}*$NP_mismatch_multi2)/100;
-                            }
-                            if ($random_chance > $chance)
-                            {
-                                last;
-                            }
-                            
-                            my $random_chance2 = rand(1);
-                            my $four_nuc = $nuc_prev.$nuc."A".$nuc_next;
-                            my $chance2 = $NP_error_profile_mismatch{$four_nuc}/100;
-                            if ($random_chance2 <= $chance2 && $nuc ne "A")
-                            {
-                               $mismatch_nuc .= "A"; 
-                            }
-                            else
-                            {
-                                $four_nuc = $nuc_prev.$nuc."C".$nuc_next;
-                                my $chance3 = $NP_error_profile_mismatch{$four_nuc}/100;
-                                if ($random_chance2 <= $chance2+$chance3 && $nuc ne "C")
-                                {
-                                   $mismatch_nuc .= "C"; 
-                                }
-                                else
-                                {
-                                    $four_nuc = $nuc_prev.$nuc."T".$nuc_next;
-                                    my $chance4 = $NP_error_profile_mismatch{$four_nuc}/100;
-                                    if ($random_chance2 <= $chance2+$chance3+$chance4 && $nuc ne "T")
-                                    {
-                                       $mismatch_nuc .= "T";
-                                    }
-                                    elsif ($nuc ne "G")
-                                    {
-                                        $mismatch_nuc .= "G";
-                                    }
-                                }
-                                $mismatches{$pos+$q} = undef;
-                            }
-                            $q++;
-                        }                     
-                                                   
-                        if ($mismatch_nuc ne "")
-                        {
-                            $f += length($mismatch_nuc);                         
-                            substr $seq_tmp, $pos, length($mismatch_nuc), $mismatch_nuc;
-                        }                         
-                    }
-#indel------------------------------------------------------------------------------------------------------           
-                    my %indels;
-                    undef %indels;
-                    my $delete_nuc_count = int($length_tmp*$NP_deletion_rate);
-                    my $s = '0';
-    
-                    while ($s < $delete_nuc_count)
-                    {
-                        my $pos = int(rand($length_read-$delete_nuc_count));
-                        if (exists($mismatches{$pos}))
-                        {
-                            next;
+                           $NP_min_read_length_tmp = $random_NP_length; 
                         }
-                        my $three_nuc = substr $seq_tmp2, $pos-2, 3;
+                        if ($random_NP_length > $NP_max_read_length_tmp)
+                        {
+                            $NP_max_read_length_tmp = $random_NP_length;
+                        }
+                        $NP_total_length_tmp += $random_NP_length;
+            
+                        if (exists($NP_seq_length{$random_NP_length+$shortest_seq1}))
+                        {
+                            goto NP_LENGTH;
+                        }
+                        my $chance_sense = int(rand(2));
+                        my $seq_tmp = "";
+                        if ($chance_sense eq '0')
+                        {
+                            $seq_tmp = reverse(substr $tmp_hap, 0, $random_NP_length-$start_read_lq);
+                            $seq_tmp =~ tr/ACTG/TGAC/;
+                        }
+                        else
+                        {
+                            $seq_tmp = substr $tmp_hap, 0, $random_NP_length-$start_read_lq;
+                        }
+                        my $seq_tmp2 = $seq_tmp;
+                        my $length_read = length($seq_tmp2);
+        
+    #input sequencing errors---------------------------------------------------------------------------------------------------------------------              
+        
+                        my $length_tmp = length($seq_tmp);                      
+                        my $j = 1.2;
+                        my $t= rand(1.5);
+                        $t+= 1;
+                        my $random_error_rate = int(($NP_error_rate/($t*$j))+$NP_error_rate-($NP_error_rate/2.2));
+                        my $extra_error = rand(($NP_error_rate/12)/100);
+        
+                        my $NP_deletion_rate = $extra_error+($random_error_rate*($del_percentage/($del_percentage+$ins_percentage+$mismatch_percentage)))/100;
+                        my $NP_insertion_rate = $extra_error+($random_error_rate*($ins_percentage/($del_percentage+$ins_percentage+$mismatch_percentage)))/100;
+                        my $NP_mismatch_rate = $extra_error+($random_error_rate*($mismatch_percentage/($del_percentage+$ins_percentage+$mismatch_percentage)))/100;
                         
-                        if (exists($NP_error_profile_del{$three_nuc}))
-                        {                   
-                            my $random_chance = rand(1);
-                            if ($random_chance <= (($NP_error_profile_del{$three_nuc}*$NP_del_multi)/100))
-                            {       
-                            }
-                            else
+                        if ($NP_error_rate eq '0')
+                        {
+                            $NP_deletion_rate = '0';
+                            $NP_insertion_rate = '0';
+                            $NP_mismatch_rate = '0';
+                        }
+                                              
+    #mismatch-----------------------------------------------------------------------------------------------          
+                        my $mismatch_nuc_count = int($length_tmp*$NP_mismatch_rate);
+                        my $f = '0';
+                        my %mismatches;
+                        undef %mismatches;
+        
+                        while ($f < $mismatch_nuc_count)
+                        {                           
+                            my $pos = int(rand($length_read-3));
+                            if (exists($mismatches{$pos}))
                             {
                                 next;
                             }
+                            if (exists($mismatches{$pos+1}))
+                            {
+                                next;
+                            }
+                            if (exists($mismatches{$pos-1}))
+                            {
+                                next;
+                            }
+                     
+                            my $nuc = substr $seq_tmp2, $pos, 1;
+                            my $nuc_prev = substr $seq_tmp2, $pos-1, 1;
+                            my $nuc_next = substr $seq_tmp2, $pos+1, 1;
+                            my $mismatch_nuc = "";
+                            my $no_extra = "";
+                                    
+                            my $three_nuc = $nuc_prev.$nuc.$nuc_next;
+                            my $chance = '1';
+                            my $random_chance = rand(1);
+                       
+                            if (exists($NP_error_profile_mismatch2{$three_nuc}))
+                            {
+                                $chance = ($NP_error_profile_mismatch2{$three_nuc}*$NP_mismatch_multi2)/100;     
+                            }
+                            if ($random_chance > $chance)
+                            {
+                                next;
+                            }
+                         
+                            my $four_nuc = $nuc_prev.$nuc."A".$nuc_next;
+                            if (exists($NP_error_profile_mismatch{$four_nuc}))
+                            {
+                                my $random_chance2 = rand(1);                              
+                                my $chance2 = $NP_error_profile_mismatch{$four_nuc}/100;
+                                if ($random_chance2 <= $chance2 && $nuc ne "A")
+                                {
+                                   $mismatch_nuc = "A"; 
+                                }
+                                else
+                                {
+                                    $four_nuc = $nuc_prev.$nuc."C".$nuc_next;
+                                    my $chance3 = $NP_error_profile_mismatch{$four_nuc}/100;
+                                    if ($random_chance2 <= $chance2+$chance3 && $nuc ne "C")
+                                    {
+                                       $mismatch_nuc = "C"; 
+                                    }
+                                    else
+                                    {
+                                        $four_nuc = $nuc_prev.$nuc."T".$nuc_next;
+                                        my $chance4 = $NP_error_profile_mismatch{$four_nuc}/100;
+                                        if ($random_chance2 <= $chance2+$chance3+$chance4 && $nuc ne "T")
+                                        {
+                                           $mismatch_nuc = "T";
+                                        }
+                                        elsif ($nuc ne "G")
+                                        {
+                                            $mismatch_nuc = "G";
+                                        }
+                                    }
+                                    $mismatches{$pos} = undef;
+                                }
+                            }
+                            else
+                            {
+                                my $range = int(rand(4));
+                                $mismatch_nuc = $nucs[$range];
+                                $mismatches{$pos} = undef;
+                                $no_extra = "yes";
+                            }
+                        
+                            my $q = '1';
+                            
+                            while ($pos+$q < $length_tmp && $no_extra eq "")
+                            {
+                                $nuc = $nuc_next;
+                                $nuc_next = substr $seq_tmp2, $pos+1+$q, 1;
+                                $nuc_prev = $nuc;
+                                
+                                $three_nuc = $nuc_prev.$nuc.$nuc_next;
+                                $random_chance = rand(1);
+                                
+                                if (exists($NP_error_profile_mismatch2{$three_nuc}))
+                                {
+                                    $chance = ($NP_error_profile_mismatch2{$three_nuc}*$NP_mismatch_multi2)/100;
+                                }
+                                if ($random_chance > $chance)
+                                {
+                                    last;
+                                }
+                                
+                                my $random_chance2 = rand(1);
+                                my $four_nuc = $nuc_prev.$nuc."A".$nuc_next;
+                                my $chance2 = $NP_error_profile_mismatch{$four_nuc}/100;
+                                if ($random_chance2 <= $chance2 && $nuc ne "A")
+                                {
+                                   $mismatch_nuc .= "A"; 
+                                }
+                                else
+                                {
+                                    $four_nuc = $nuc_prev.$nuc."C".$nuc_next;
+                                    my $chance3 = $NP_error_profile_mismatch{$four_nuc}/100;
+                                    if ($random_chance2 <= $chance2+$chance3 && $nuc ne "C")
+                                    {
+                                       $mismatch_nuc .= "C"; 
+                                    }
+                                    else
+                                    {
+                                        $four_nuc = $nuc_prev.$nuc."T".$nuc_next;
+                                        my $chance4 = $NP_error_profile_mismatch{$four_nuc}/100;
+                                        if ($random_chance2 <= $chance2+$chance3+$chance4 && $nuc ne "T")
+                                        {
+                                           $mismatch_nuc .= "T";
+                                        }
+                                        elsif ($nuc ne "G")
+                                        {
+                                            $mismatch_nuc .= "G";
+                                        }
+                                    }
+                                    $mismatches{$pos+$q} = undef;
+                                }
+                                $q++;
+                            }                     
+                                                       
+                            if ($mismatch_nuc ne "")
+                            {
+                                $f += length($mismatch_nuc);                         
+                                substr $seq_tmp, $pos, length($mismatch_nuc), $mismatch_nuc;
+                            }                         
                         }
-    
-                        my $extra_del = rand(1);
-                        my $length_tmp2 = '1';
-                        my $threshold = 0.7;
-                        if (exists ($NP_del_length{$length_tmp2}))
+    #indel------------------------------------------------------------------------------------------------------           
+                        my %indels;
+                        undef %indels;
+                        my $delete_nuc_count = int($length_tmp*$NP_deletion_rate);
+                        my $s = '0';
+        
+                        while ($s < $delete_nuc_count)
                         {
-                            $threshold = $NP_del_length{$length_tmp2};
-                        }
-                        while ($extra_del > $threshold && $pos < length($seq_tmp2)+$length_tmp2 && $length_tmp2 < 30)
-                        {
-                            $length_tmp2++;
-                            $extra_del = rand(1);
+                            my $pos = int(rand($length_read-$delete_nuc_count));
+                            if (exists($mismatches{$pos}))
+                            {
+                                next;
+                            }
+                            my $three_nuc = substr $seq_tmp2, $pos-2, 3;
+                            
+                            if (exists($NP_error_profile_del{$three_nuc}))
+                            {                   
+                                my $random_chance = rand(1);
+                                if ($random_chance <= (($NP_error_profile_del{$three_nuc}*$NP_del_multi)/100))
+                                {       
+                                }
+                                else
+                                {
+                                    next;
+                                }
+                            }
+        
+                            my $extra_del = rand(1);
+                            my $length_tmp2 = '1';
+                            my $threshold = 0.7;
                             if (exists ($NP_del_length{$length_tmp2}))
                             {
                                 $threshold = $NP_del_length{$length_tmp2};
                             }
+                            while ($extra_del > $threshold && $pos < length($seq_tmp2)+$length_tmp2 && $length_tmp2 < 30)
+                            {
+                                $length_tmp2++;
+                                $extra_del = rand(1);
+                                if (exists ($NP_del_length{$length_tmp2}))
+                                {
+                                    $threshold = $NP_del_length{$length_tmp2};
+                                }
+                                $s++;
+                            }
+                            $indels{$pos-1} = $length_tmp2;
                             $s++;
                         }
-                        $indels{$pos-1} = $length_tmp2;
-                        $s++;
-                    }
-    
-                    my $r = '0';
-    
-                    my $insert_nuc_count = int($length_tmp*$NP_insertion_rate);
-                    while ($r < $insert_nuc_count)
-                    {                                          
-                        my $pos = rand($length_read);
-                        if (exists($mismatches{$pos}))
-                        {
-                            next;
-                        }
-                        my $nuc_prev = substr $seq_tmp2, $pos, 1;
-                        my $nuc_next = substr $seq_tmp2, $pos+1, 1;
-                        my $insert_seq = "";
-                        
-                        
-                        my $two_nuc = $nuc_prev.$nuc_next;
-                        my $chance = '1';
-                        my $random_chance = rand(1);
-                    
-                        if (exists($NP_error_profile_ins2{$two_nuc}))
-                        {
-                            $chance = ($NP_error_profile_ins2{$two_nuc}*$NP_ins_multi2)/100;
-                        }
-                        if ($random_chance > $chance)
-                        {
-                            next;
-                        }
-                        elsif (exists($NP_error_profile_ins2{$two_nuc}))
-                        {
-                            my $random_chance2 = rand(1);
-                            my $three_nuc = $nuc_prev."A".$nuc_next;
-                            my $three_nuc2 = $nuc_prev."C".$nuc_next;
-                            my $three_nuc3 = $nuc_prev."T".$nuc_next;
-                            my $three_nuc4 = $nuc_prev."G".$nuc_next;
-                            my $chance2 = ($NP_error_profile_ins{$three_nuc})/
-                            ($NP_error_profile_ins{$three_nuc}+$NP_error_profile_ins{$three_nuc2}+$NP_error_profile_ins{$three_nuc3}+$NP_error_profile_ins{$three_nuc4});
-    
-                            if ($random_chance2 <= $chance2)
+        
+                        my $r = '0';
+        
+                        my $insert_nuc_count = int($length_tmp*$NP_insertion_rate);
+                        while ($r < $insert_nuc_count)
+                        {                                          
+                            my $pos = rand($length_read);
+                            if (exists($mismatches{$pos}))
                             {
-                               $insert_seq = "A"; 
+                                next;
                             }
-                            else
+                            my $nuc_prev = substr $seq_tmp2, $pos, 1;
+                            my $nuc_next = substr $seq_tmp2, $pos+1, 1;
+                            my $insert_seq = "";
+                            
+                            
+                            my $two_nuc = $nuc_prev.$nuc_next;
+                            my $chance = '1';
+                            my $random_chance = rand(1);
+                        
+                            if (exists($NP_error_profile_ins2{$two_nuc}))
                             {
-                                my $chance3 = ($NP_error_profile_ins{$three_nuc2})/
-                            ($NP_error_profile_ins{$three_nuc}+$NP_error_profile_ins{$three_nuc2}+$NP_error_profile_ins{$three_nuc3}+$NP_error_profile_ins{$three_nuc4});
-                                if ($random_chance2 <= $chance2+$chance3)
+                                $chance = ($NP_error_profile_ins2{$two_nuc}*$NP_ins_multi2)/100;
+                            }
+                            if ($random_chance > $chance)
+                            {
+                                next;
+                            }
+                            elsif (exists($NP_error_profile_ins2{$two_nuc}))
+                            {
+                                my $random_chance2 = rand(1);
+                                my $three_nuc = $nuc_prev."A".$nuc_next;
+                                my $three_nuc2 = $nuc_prev."C".$nuc_next;
+                                my $three_nuc3 = $nuc_prev."T".$nuc_next;
+                                my $three_nuc4 = $nuc_prev."G".$nuc_next;
+                                my $chance2 = ($NP_error_profile_ins{$three_nuc})/
+                                ($NP_error_profile_ins{$three_nuc}+$NP_error_profile_ins{$three_nuc2}+$NP_error_profile_ins{$three_nuc3}+$NP_error_profile_ins{$three_nuc4});
+        
+                                if ($random_chance2 <= $chance2)
                                 {
-                                   $insert_seq = "C"; 
+                                   $insert_seq = "A"; 
                                 }
                                 else
                                 {
-                                    my $chance4 = ($NP_error_profile_ins{$three_nuc3})/
-                            ($NP_error_profile_ins{$three_nuc}+$NP_error_profile_ins{$three_nuc2}+$NP_error_profile_ins{$three_nuc3}+$NP_error_profile_ins{$three_nuc4});
-                                    if ($random_chance2 <= $chance2+$chance3+$chance4)
+                                    my $chance3 = ($NP_error_profile_ins{$three_nuc2})/
+                                ($NP_error_profile_ins{$three_nuc}+$NP_error_profile_ins{$three_nuc2}+$NP_error_profile_ins{$three_nuc3}+$NP_error_profile_ins{$three_nuc4});
+                                    if ($random_chance2 <= $chance2+$chance3)
                                     {
-                                       $insert_seq = "T";
+                                       $insert_seq = "C"; 
                                     }
                                     else
                                     {
-                                        $insert_seq = "G";
+                                        my $chance4 = ($NP_error_profile_ins{$three_nuc3})/
+                                ($NP_error_profile_ins{$three_nuc}+$NP_error_profile_ins{$three_nuc2}+$NP_error_profile_ins{$three_nuc3}+$NP_error_profile_ins{$three_nuc4});
+                                        if ($random_chance2 <= $chance2+$chance3+$chance4)
+                                        {
+                                           $insert_seq = "T";
+                                        }
+                                        else
+                                        {
+                                            $insert_seq = "G";
+                                        }
                                     }
                                 }
                             }
-                        }
-                        else
-                        {
-                            my $range = int(rand(4));
-                            $insert_seq = $nucs[$range];
-                            $mismatches{$pos} = undef;
-                        }
-                        
-                        my $extra_ins = rand(1);
-                        my $threshold = 0.8;
-                        if (exists ($NP_ins_length{length($insert_seq)}))
-                        {
-                            $threshold = $NP_ins_length{length($insert_seq)};
-                        }
-                        while ($extra_ins > $threshold && $pos < length($seq_tmp2))
-                        {
-                            my $random_nuc2 = int(rand(4));
-                            $insert_seq .= $nucs[$random_nuc2-1];
-                            $extra_ins = rand(1);
+                            else
+                            {
+                                my $range = int(rand(4));
+                                $insert_seq = $nucs[$range];
+                                $mismatches{$pos} = undef;
+                            }
+                            
+                            my $extra_ins = rand(1);
+                            my $threshold = 0.8;
                             if (exists ($NP_ins_length{length($insert_seq)}))
                             {
                                 $threshold = $NP_ins_length{length($insert_seq)};
                             }
-                            $r++;
+                            while ($extra_ins > $threshold && $pos < length($seq_tmp2))
+                            {
+                                my $random_nuc2 = int(rand(4));
+                                $insert_seq .= $nucs[$random_nuc2-1];
+                                $extra_ins = rand(1);
+                                if (exists ($NP_ins_length{length($insert_seq)}))
+                                {
+                                    $threshold = $NP_ins_length{length($insert_seq)};
+                                }
+                                $r++;
+                            }
+                            $indels{$pos} = $insert_seq;
+                            $r++;    
                         }
-                        $indels{$pos} = $insert_seq;
-                        $r++;    
-                    }
-#-----------------------------------------------------------------------------------------------------------                                   
-                    
-                    foreach my $indel_tmp (sort {$b <=> $a} keys %indels)
-                    {                        
-                        if ($indels{$indel_tmp} > 0)
-                        {
-                            substr $seq_tmp, $indel_tmp, $indels{$indel_tmp}, "";
+    #-----------------------------------------------------------------------------------------------------------                                   
+                        
+                        foreach my $indel_tmp (sort {$b <=> $a} keys %indels)
+                        {                        
+                            if ($indels{$indel_tmp} > 0)
+                            {
+                                substr $seq_tmp, $indel_tmp, $indels{$indel_tmp}, "";
+                            }
+                            else
+                            {
+                                my $one = substr $seq_tmp, 0, $indel_tmp;
+                                my $two = substr $seq_tmp, $indel_tmp;
+                                $seq_tmp = $one.$indels{$indel_tmp}.$two;
+                            }
                         }
-                        else
-                        {
-                            my $one = substr $seq_tmp, 0, $indel_tmp;
-                            my $two = substr $seq_tmp, $indel_tmp;
-                            $seq_tmp = $one.$indels{$indel_tmp}.$two;
-                        }
-                    }
-    
-                    print $OUTPUT_NP ">".$project."_".$NP_read_count."_length=".length($seq_tmp)."_HAP".$haps_tmp."\n";
-                    print $OUTPUT_NP $seq_tmp."\n";
-    
-                    $NP_seq_length{$shortest_seq1+$random_NP_length} = undef;
-                    $o++;
-                }
-                
-                if ($d eq '0')
-                {
-                    foreach my $seq_length (sort {$a <=> $b} keys %NP_seq_length)
-                    {           
-                        $shortest_seq1 = $seq_length;
-                        delete $NP_seq_length{$seq_length};           
-                        $d++;
-                        last;
-                    }
-                }
-                    
-                my $shortest_seq_tmp = '0';
-    
-                $shortest_seq_tmp = $shortest_seq1-$seq_done1;
-                $seq_done1 += $shortest_seq_tmp;
-                
-                substr $tmp_hap, 0, $shortest_seq_tmp, "";
-            }
-            close $OUTPUT_NP;
-            my %hash_tmp;
-            $hash_tmp{'1'} = $NP_read_count;
-            $hash_tmp{'2'} = $NP_total_length_tmp;
-            $hash_tmp{'3'} = $NP_max_read_length_tmp;
-            $hash_tmp{'4'} = $NP_min_read_length_tmp;
-            $pm->finish(0, \%hash_tmp);
-        }
         
+                        print $OUTPUT_NP ">".$project."_".$NP_read_count."_length=".length($seq_tmp)."_HAP".$haps_tmp."\n";
+                        print $OUTPUT_NP $seq_tmp."\n";
+        
+                        $NP_seq_length{$shortest_seq1+$random_NP_length} = undef;
+                        $o++;
+                    }
+                    
+                    if ($d eq '0')
+                    {
+                        foreach my $seq_length (sort {$a <=> $b} keys %NP_seq_length)
+                        {           
+                            $shortest_seq1 = $seq_length;
+                            delete $NP_seq_length{$seq_length};           
+                            $d++;
+                            last;
+                        }
+                    }
+                        
+                    my $shortest_seq_tmp = '0';
+        
+                    $shortest_seq_tmp = $shortest_seq1-$seq_done1;
+                    $seq_done1 += $shortest_seq_tmp;
+                    
+                    substr $tmp_hap, 0, $shortest_seq_tmp, "";
+                }
+                close $OUTPUT_NP;
+                my %hash_tmp;
+                $hash_tmp{'1'} = $NP_read_count;
+                $hash_tmp{'2'} = $NP_total_length_tmp;
+                $hash_tmp{'3'} = $NP_max_read_length_tmp;
+                $hash_tmp{'4'} = $NP_min_read_length_tmp;
+                $pm->finish(0, \%hash_tmp);
+            }
+        }
         $haplotype1_print = "";
         $haplotype2_print = "";
         $haplo_merged_print = "";
