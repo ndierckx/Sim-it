@@ -449,7 +449,7 @@ while (my $line = <CONFIG>)
     
 #Read simulation input----------------------------------------------------------------------------------------
 
-    if ($line =~ m/.*Coverage\s+\=\s+(.*?)(Average length.*)*$/)
+    if ($line =~ m/.*Sequencing depth\s+\=\s+(.*?)(Average length.*)*$/)
     {
         $NP_coverage = $1;
         chomp $NP_coverage;
@@ -634,7 +634,7 @@ print "Heterozygosity           = ".$heterozygosity."\n\n\n";
 
 print "Long Read simulation:\n";
 print "-----------------------\n";
-print "Coverage                 = ".$NP_coverage."\n";
+print "Sequencing depth         = ".$NP_coverage."\n";
 print "Median length            = ".$NP_average."\n";
 print "Length range             = ".$NP_range."\n";
 print "Accuracy                 = ".$NP_accuracy."\n";
@@ -677,7 +677,7 @@ print OUTPUT_LOG "Heterozygosity           = ".$heterozygosity."\n\n\n";
 
 print OUTPUT_LOG "Long Read simulation:\n";
 print OUTPUT_LOG "-----------------------\n";
-print OUTPUT_LOG "Coverage                 = ".$NP_coverage."\n";
+print OUTPUT_LOG "Sequencing depth         = ".$NP_coverage."\n";
 print OUTPUT_LOG "Median length            = ".$NP_average."\n";
 print OUTPUT_LOG "Length range             = ".$NP_range."\n";
 print OUTPUT_LOG "Accuracy                 = ".$NP_accuracy."\n";
