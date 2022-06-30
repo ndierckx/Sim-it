@@ -14,7 +14,7 @@ use Parallel::ForkManager;
 
 print "\n\n-----------------------------------------------";
 print "\nSim-it\n";
-print "Version 1.3.1\n";
+print "Version 1.3.2\n";
 print "Author: Nicolas Dierckxsens, (c) 2020-2022\n";
 print "-----------------------------------------------\n\n";
 
@@ -142,7 +142,7 @@ my @nucs = ("A","C","T","G");
 GetOptions (
             "c=s" => \$config,
             "o=s" => \$output,
-            ) or die "Incorrect usage!\n";
+            ) or die "Incorrect usage!\n\nUsage: perl NOVOLoci1.0.pl -c config.txt -o output_path\n\n";
 
 open(CONFIG, $config) or die "Error: Can't open the configuration file, please check the manual!\n\nUsage: perl Sim-it.pl -c config.txt -o output_path\n\n";
 
@@ -151,6 +151,13 @@ if ($last_output ne "/" && $output ne "")
 {
     $output .= "/";
 }
+if (-d $output)
+{}
+else
+{
+    mkdir $output;
+}
+
 while (my $line = <CONFIG>)
 {
     chomp($line);
@@ -1780,6 +1787,7 @@ my $reference_size2 = '0';
 my $current_contig = "";
 my $size_current_contig = '0';
 
+#-----------------------------------------------------------------------------------------------------------------------------------
 #Subroutines------------------------------------------------------------------------------------------------------------------------
 #-----------------------------------------------------------------------------------------------------------------------------------
 
@@ -1865,11 +1873,13 @@ sub insert_seq
 }
 #------------------------------------------------------------------------------------------------------------------------------------
 #Read simulation parameters---------------------------------------------------------------------------------------------
+#------------------------------------------------------------------------------------------------------------------------------------
 
 my @NP_range = split /-/, $NP_range;
 my $NP_range_low = $NP_range[0];
 my $NP_range_high = $NP_range[1];
-my $output_NP = $output."Nanopore_".$project.".fasta";
+my $output2 = $output."_";
+my $output_NP = $output2."Reads_".$project.".fasta";
 
 my %NP_seq_length;
 undef %NP_seq_length;
@@ -1878,7 +1888,7 @@ undef %NP_seq_length1;
 my %NP_seq_length2;
 undef %NP_seq_length2;
 
-if ($NP_accuracy =~ m/^(\d+)%.*$/)
+if ($NP_accuracy =~ m/^(\d+)%*.*$/)
 {
     $NP_accuracy = $1;
 }
@@ -1973,7 +1983,7 @@ my %chromosomes;
 undef  %chromosomes;
 my $NP_read_count_total = '0';
 
-my $maxProcs = 6;
+my $maxProcs = 8;
 my $pm = new Parallel::ForkManager($maxProcs);
 
 my %ret_data;
@@ -2221,7 +2231,7 @@ NEW_CONTIG0:
                 my $haplo_tmp2 = $haplo_tmp[0];
                 my $chr_tmp = $haplo_tmp[1];
                 $chr_tmp =~ tr/: /__/;
-                my $output_NP_tmp = $output."Nanopore_to_merge_".$project."_".$chr_tmp."_".$haplo_tmp2.".fasta";
+                my $output_NP_tmp = $output."Long_reads_to_merge_".$project."_".$chr_tmp."_".$haplo_tmp2.".fasta";
                 if (exists($merge_command{$haplo_tmp2}))
                 {
                     my $tmp = $merge_command{$haplo_tmp2}." ".$output_NP_tmp;
@@ -2237,7 +2247,7 @@ NEW_CONTIG0:
             foreach my $haps_tmp (sort keys %haps)
             {
                 my $pid = $pm->start and next;
-                
+  srand();              
                 my $NP_read_count = '0';
                 my $NP_total_length_tmp = '0';
                 my $NP_min_read_length_tmp = '10000000000000000';
@@ -2251,8 +2261,8 @@ NEW_CONTIG0:
                 $chr_tmp =~ tr/: /__/;
                 
                 my $OUTPUT_NP;
-                my $output_NP_tmp = $output."Nanopore_to_merge_".$project."_".$chr_tmp."_".$haplo_tmp2.".fasta";
-                open($OUTPUT_NP, ">" .$output_NP_tmp) or die "Can't open Nanopore file $output_NP_tmp, $!\n";
+                my $output_NP_tmp = $output."Long_reads_to_merge_".$project."_".$chr_tmp."_".$haplo_tmp2.".fasta";
+                open($OUTPUT_NP, ">" .$output_NP_tmp) or die "Can't open Long reads file $output_NP_tmp, $!\n";
                 
                 my $NP_coverage_tmp = $NP_coverage;   
                 
@@ -2292,7 +2302,7 @@ NEW_CONTIG0:
                     my $d = '0';    
                     my $count_seqs = keys %NP_seq_length;
     
-                    while ($o <= $NP_coverage_tmp-$count_seqs)
+                    while ($o < $NP_coverage_tmp-$count_seqs)
                     {
                         $NP_read_count++;
     NP_LENGTH0:      
@@ -2337,7 +2347,7 @@ NEW_CONTIG0:
                         my $seq_tmp2 = $seq_tmp;
                         my $length_read = length($seq_tmp2);
         
-    #input sequencing errors---------------------------------------------------------------------------------------------------------------------              
+#input sequencing errors---------------------------------------------------------------------------------------------------------------------              
         
                         my $length_tmp = length($seq_tmp);                      
                         my $j = 1.2;
@@ -2357,7 +2367,7 @@ NEW_CONTIG0:
                             $NP_mismatch_rate = '0';
                         }
                                               
-    #mismatch-----------------------------------------------------------------------------------------------          
+#mismatch-----------------------------------------------------------------------------------------------          
                         my $mismatch_nuc_count = int($length_tmp*$NP_mismatch_rate);
                         my $f = '0';
                         my %mismatches;
@@ -2497,8 +2507,8 @@ NEW_CONTIG0:
                                 $f += length($mismatch_nuc);                         
                                 substr $seq_tmp, $pos, length($mismatch_nuc), $mismatch_nuc;
                             }                         
-                        }
-    #indel------------------------------------------------------------------------------------------------------           
+                        }                   
+#indel------------------------------------------------------------------------------------------------------           
                         my %indels;
                         undef %indels;
                         my $delete_nuc_count = int($length_tmp*$NP_deletion_rate);
@@ -2792,6 +2802,7 @@ NEW_CONTIG0:
         next REF;
     }
 #--------   
+    $line =~ tr/actgn/ACTGN/;
     if ($translocating eq "yes")
     {
         if (eof)
@@ -3745,7 +3756,7 @@ NEW_CONTIG:
                 my $haplo_tmp2 = $haplo_tmp[0];
                 my $chr_tmp = $haplo_tmp[1];
                 $chr_tmp =~ tr/: /__/;
-                my $output_NP_tmp = $output."Nanopore_to_merge_".$project."_".$chr_tmp."_".$haplo_tmp2.".fasta";
+                my $output_NP_tmp = $output."Long_reads_to_merge_".$project."_".$chr_tmp."_".$haplo_tmp2.".fasta";
                 if (exists($merge_command{$haplo_tmp2}))
                 {
                     my $tmp = $merge_command{$haplo_tmp2}." ".$output_NP_tmp;
@@ -3760,7 +3771,7 @@ NEW_CONTIG:
             foreach my $haps_tmp (sort keys %haps)
             {
                 my $pid = $pm->start and next;
-    
+    srand();
                 my $NP_read_count = '0';
                 my $NP_total_length_tmp = '0';
                 my $NP_min_read_length_tmp = '10000000000000000';
@@ -3774,8 +3785,8 @@ NEW_CONTIG:
                 $chr_tmp =~ tr/: /__/; 
                 
                 my $OUTPUT_NP;
-                my $output_NP_tmp = $output."Nanopore_to_merge_".$project."_".$chr_tmp."_".$haplo_tmp2.".fasta";
-                open($OUTPUT_NP, ">" .$output_NP_tmp) or die "Can't open Nanopore file $output_NP_tmp, $!\n";
+                my $output_NP_tmp = $output."Long_reads_to_merge_".$project."_".$chr_tmp."_".$haplo_tmp2.".fasta";
+                open($OUTPUT_NP, ">" .$output_NP_tmp) or die "Can't open Long reads file $output_NP_tmp, $!\n";
                 
                 my $NP_coverage_tmp = $NP_coverage;   
                 
@@ -3815,7 +3826,7 @@ NEW_CONTIG:
                     my $d = '0';    
                     my $count_seqs = keys %NP_seq_length;
     
-                    while ($o <= $NP_coverage_tmp-$count_seqs)
+                    while ($o < $NP_coverage_tmp-$count_seqs)
                     {
                         $NP_read_count++;
     NP_LENGTH:      
@@ -4246,7 +4257,7 @@ my $merge_command = "";
 
 foreach my $merge_command_tmp (keys %merge_command)
 {
-    $merge_command = "cat ".$merge_command{$merge_command_tmp}." > ".$output."Nanopore_".$project."_HAP".$merge_command_tmp.".fasta";
+    $merge_command = "cat ".$merge_command{$merge_command_tmp}." > ".$output."Long_reads_".$project."_HAP".$merge_command_tmp.".fasta";
     system($merge_command);
     my @remove_files = split /\s/, $merge_command{$merge_command_tmp};
     foreach my $remove_file_tmp (@remove_files)
@@ -4255,6 +4266,10 @@ foreach my $merge_command_tmp (keys %merge_command)
         system($remove_command);
     }
 }
+
+my $merge_command2 = "cat ".$output."Long_reads_".$project."_HAP1.fasta"." ".$output."Long_reads_".$project."_HAP2.fasta"." > ".$output."Long_reads_".$project."_HAP12.fasta";
+system($merge_command2);
+
 
 print "\n\n";
 #print STATS------------------------------------------------------------------------------------------------------------------------
