@@ -14,7 +14,7 @@ use Parallel::ForkManager;
 
 print "\n\n-----------------------------------------------";
 print "\nSim-it\n";
-print "Version 1.3.2\n";
+print "Version 1.3.3\n";
 print "Author: Nicolas Dierckxsens, (c) 2020-2022\n";
 print "-----------------------------------------------\n\n";
 
@@ -122,6 +122,7 @@ my $NP_range = "";
 my $NP_average = "";
 my $NP_accuracy = "";
 my $NP_error_profile = "";
+my $maxProcs = 8;
 
 my %graph_DEL;
 undef %graph_DEL;
@@ -209,7 +210,7 @@ while (my $line = <CONFIG>)
             }
         }   
     }
-    if ($line =~ m/.*Replace ambiguous nts\(N\)\s+\=\s+(.*?)(Structural variation:.*)*$/)
+    if ($line =~ m/.*Replace ambiguous nts\(N\)\s+\=\s+(.*?)(Max threads.*)*$/)
     {
         $ambigious_replace = $1;
         chomp $ambigious_replace;
@@ -219,6 +220,20 @@ while (my $line = <CONFIG>)
             {
                 $ambigious_replace = $line;
                 chomp $ambigious_replace;
+                last;
+            }
+        }
+    }
+    if ($line =~ m/.*Max threads\s+\=\s+(.*?)(Structural variation:.*)*$/)
+    {
+        $maxProcs = $1;
+        chomp $maxProcs;
+        if ($maxProcs eq "batch" && $batch_file ne "")
+        {
+            while (my $line = <BATCH>)
+            {
+                $maxProcs = $line;
+                chomp $maxProcs;
                 last;
             }
         }
@@ -575,6 +590,50 @@ if ($NP_error_profile eq "" && $NP_coverage ne "")
 {
     die "\n\nAn error profile should be given$!\n";
 }
+
+chomp($heterozygosity);
+$heterozygosity =~ tr/,/./;
+if ($heterozygosity =~ m/^(\d+\.*\d*)%*.*$/)
+{
+    $heterozygosity = $1;
+    $heterozygosity /= 100;
+}
+if ($heterozygosity eq "")
+{
+    $heterozygosity = "no";
+}
+elsif ($heterozygosity eq '0')
+{
+    $heterozygosity = "no";
+}
+elsif ($heterozygosity <= 1)
+{}
+else
+{
+    die "\nHeterozygosity: '$heterozygosity' has to be a value between 0 and 100 or left empty!\n";
+}
+chomp($maxProcs);
+if ($maxProcs eq "" || ($maxProcs < 17 && $maxProcs > 0))
+{}
+else
+{
+    die "\nMax Threads: '$maxProcs' has to be a value between 1 and 16 or left empty!\n";
+}
+chomp($NP_accuracy);
+$NP_accuracy =~ tr/,/./;
+if ($NP_accuracy =~ m/^(\d+\.*\d*)%*.*$/)
+{
+    $NP_accuracy = $1;
+}
+if ($NP_accuracy eq "")
+{}
+elsif ($NP_accuracy <= 110 && $NP_accuracy > 69)
+{}
+else
+{
+    die "\nAccuracy: '$NP_accuracy' has to be a value between 70 and 100 or left empty!\n";
+}
+
 #----------------------------------------------------------------------------------------------------
 
 if (-d $output || $output eq "")
@@ -611,7 +670,8 @@ print "Project:\n";
 print "-----------------------\n";
 print "Project name             = ".$project."\n";
 print "Reference sequence       = ".$reference."\n";
-print "Replace ambiguous nts(N) = ".$ambigious_replace."\n\n\n";
+print "Replace ambiguous nts(N) = ".$ambigious_replace."\n";
+print "Max threads              = ".$maxProcs."\n\n\n";
 
 print "Structural variation:\n";
 print "-----------------------\n";
@@ -654,7 +714,8 @@ print OUTPUT_LOG "Project:\n";
 print OUTPUT_LOG "-----------------------\n";
 print OUTPUT_LOG "Project name             = ".$project."\n";
 print OUTPUT_LOG "Reference                = ".$reference."\n";
-print OUTPUT_LOG "Replace ambiguous nts(N) = ".$ambigious_replace."\n\n\n";
+print OUTPUT_LOG "Replace ambiguous nts(N) = ".$ambigious_replace."\n";
+print OUTPUT_LOG "Max threads              = ".$maxProcs."\n\n\n";
 
 print OUTPUT_LOG "Structural variation:\n";
 print OUTPUT_LOG "-----------------------\n";
@@ -690,24 +751,12 @@ print OUTPUT_LOG "Length range             = ".$NP_range."\n";
 print OUTPUT_LOG "Accuracy                 = ".$NP_accuracy."\n";
 print OUTPUT_LOG "Error profile            = ".$NP_error_profile."\n\n";
 
-
-if ($heterozygosity =~ m/^(\d+)%.*$/)
-{
-    $heterozygosity = $1;
-    $heterozygosity /= 100;
-}
-else
-{
-    $heterozygosity = "no";
-}
-if ($heterozygosity eq '0')
-{
-    $heterozygosity = "no";
-}
 my $seq_depth = "";
 my %seq_depth;
+chomp($NP_coverage);
 if ($NP_coverage =~ m/^\d+$/)
-{   
+{
+    $NP_coverage = $1;
 }
 elsif ($NP_coverage eq "")
 {
@@ -1888,7 +1937,8 @@ undef %NP_seq_length1;
 my %NP_seq_length2;
 undef %NP_seq_length2;
 
-if ($NP_accuracy =~ m/^(\d+)%*.*$/)
+$NP_accuracy =~ tr/,/./;
+if ($NP_accuracy =~ m/^(\d+\.*\d*)%*.*$/)
 {
     $NP_accuracy = $1;
 }
@@ -1983,7 +2033,7 @@ my %chromosomes;
 undef  %chromosomes;
 my $NP_read_count_total = '0';
 
-my $maxProcs = 8;
+
 my $pm = new Parallel::ForkManager($maxProcs);
 
 my %ret_data;
