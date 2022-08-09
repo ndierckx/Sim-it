@@ -24,7 +24,7 @@ https://github.com/ndierckx/Sim-it/wiki
 
 Usage:
 
-<code>perl Sim-it1.3.2.pl -c config_Sim-it.txt -o output/directory/path</code>
+<code>perl Sim-it1.3.3.pl -c config_Sim-it.txt -o output/directory/path</code>
 
 
 ----------------------------------------------------------------------------------------------------------
@@ -44,6 +44,7 @@ Project:
 Project name             = Test
 Reference sequence       = /path/to/reference.fasta
 Replace ambiguous nts(N) = 
+Max threads              = 8
 
 
 Structural variation:
@@ -91,6 +92,7 @@ Project name             = Choose a name for your project, it will be used for t
 Reference sequence       = /path/to/reference.fasta  #it can be a gzipped file
 Replace ambiguous nts(N) = If the reference contains regions with ambiguous nucleotides, these can be replaced by 
                            random nucleotides to avoid reads consisting out of Ns (yes/no) (Default: no)
+Max threads              = You can choose the mamximum parallel threads that can be used (Default: no)
 
 
 Structural variation:
