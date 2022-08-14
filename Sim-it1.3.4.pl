@@ -14,7 +14,7 @@ use Parallel::ForkManager;
 
 print "\n\n-----------------------------------------------";
 print "\nSim-it\n";
-print "Version 1.3.3\n";
+print "Version 1.3.4\n";
 print "Author: Nicolas Dierckxsens, (c) 2020-2022\n";
 print "-----------------------------------------------\n\n";
 
@@ -754,7 +754,7 @@ print OUTPUT_LOG "Error profile            = ".$NP_error_profile."\n\n";
 my $seq_depth = "";
 my %seq_depth;
 chomp($NP_coverage);
-if ($NP_coverage =~ m/^\d+$/)
+if ($NP_coverage =~ m/^(\d+)$/)
 {
     $NP_coverage = $1;
 }
@@ -766,7 +766,7 @@ else
 {
     print "\n--------------------------READ SEQUENCING DEPTH FILE----------------------------\n\n";
     print OUTPUT_LOG "\n--------------------------READ SEQUENCING DEPTH FILE----------------------------\n\n";
-    open(SEQ_DEPTH, $NP_coverage) or die "\nCan't open sequencing depth file $NP_coverage, $!\n";
+    open(SEQ_DEPTH, $NP_coverage) or die "\nIncorrect coverage number or can't open sequencing depth file $NP_coverage, $!\n";
     $seq_depth = $NP_coverage;
     $NP_coverage = "";
     my $total_coverage = '0';
