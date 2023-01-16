@@ -754,7 +754,7 @@ print OUTPUT_LOG "Error profile            = ".$NP_error_profile."\n\n";
 my $seq_depth = "";
 my %seq_depth;
 chomp($NP_coverage);
-if ($NP_coverage =~ m/^(\d+)$/)
+if ($NP_coverage =~ m/^\s*(\d+)\s*$/)
 {
     $NP_coverage = $1;
 }
