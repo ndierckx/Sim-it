@@ -162,6 +162,8 @@ else
 while (my $line = <CONFIG>)
 {
     chomp($line);
+    $line =~ tr/\r//d;
+    $line =~ s/\R/\012/;
     if ($line =~ m/.*Project name\s+\=\s+(.*?)(Reference sequence.*)*$/)
     {
         $project = $1;
