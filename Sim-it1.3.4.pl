@@ -1,7 +1,7 @@
 #!/usr/bin/env perl
 ######################################################
 #         SOFTWARE COPYRIGHT NOTICE AGREEMENT        #
-#  Copyright (C) {2020-2022}  {Nicolas Dierckxsens}  #
+#  Copyright (C) {2020-2023}  {Nicolas Dierckxsens}  #
 #              All Rights Reserved                   #
 #         See file LICENSE for details.              #
 ######################################################
@@ -14,8 +14,8 @@ use Parallel::ForkManager;
 
 print "\n\n-----------------------------------------------";
 print "\nSim-it\n";
-print "Version 1.3.4\n";
-print "Author: Nicolas Dierckxsens, (c) 2020-2022\n";
+print "Version 1.3.5\n";
+print "Author: Nicolas Dierckxsens, (c) 2020-2023\n";
 print "-----------------------------------------------\n\n";
 
 my $reference = "";
@@ -36,6 +36,7 @@ my $SVs_whitin_1_line = "";
 my $SVs_whitin_1_line_length = "";
 my %SV;
 undef %SV;
+my $time_check1 = '0';
 
 #error_profile-----
 my $AAGA = '0';
@@ -843,6 +844,8 @@ if ($VCF_input ne "")
         while (my $line_seq = <INPUT_SEQ>)
         {
             chomp $line_seq;
+            $line_seq =~ tr/\r//d;
+            $line_seq =~ s/\R/\012/;
             my $first_tmp = substr $line_seq, 0, 1, "";
             if ($first_tmp eq ">" && $id eq "")
             {
@@ -1113,24 +1116,36 @@ if ($check_zip eq "gz")
     open ($FILE_REF, '-|', 'gzip', '-dc', $reference) or die "Can't open file $reference, $!\n";
     $firstLine = <$FILE_REF>;
     chomp $firstLine;
+    $firstLine =~ tr/\r//d;
+    $firstLine =~ s/\R/\012/;
     $secondLine = <$FILE_REF>;
     chomp $secondLine;
+    $secondLine =~ tr/\r//d;
+    $secondLine =~ s/\R/\012/;
 }
 elsif ($check_zip2 eq "bz2")
 {
     open ($FILE_REF, '-|', 'bzip2', '-dc', $reference) or die "Can't open file $reference, $!\n";
     $firstLine = <$FILE_REF>;
     chomp $firstLine;
+    $firstLine =~ tr/\r//d;
+    $firstLine =~ s/\R/\012/;
     $secondLine = <$FILE_REF>;
     chomp $secondLine;
+    $secondLine =~ tr/\r//d;
+    $secondLine =~ s/\R/\012/;
 }
 else
 {
     open($FILE_REF, $reference) or die "\n\nCan't open reference file $reference, $!\n";
     $firstLine = <$FILE_REF>;
     chomp $firstLine;
+    $firstLine =~ tr/\r//d;
+    $firstLine =~ s/\R/\012/;
     $secondLine = <$FILE_REF>;
     chomp $secondLine;
+    $secondLine =~ tr/\r//d;
+    $secondLine =~ s/\R/\012/;
 }
 close $FILE_REF;
 if ($check_zip eq "gz")
@@ -1166,6 +1181,8 @@ my $sequence_final = "";
 while (my $line = <$FILE_REF>)
 {     
     chomp $line;
+    $line =~ tr/\r//d;
+    $line =~ s/\R/\012/;
     if ($reference_size < 1)
     {
         $last_contig_id = $line;
@@ -1329,6 +1346,8 @@ if ($VCF_input_TRA > 0)
     while (my $line = <$FILE_REF>)
     {     
         chomp $line;
+        $line =~ tr/\r//d;
+        $line =~ s/\R/\012/;
         if ($reference_size_tmp < 1)
         {
             $last_contig_id = $line;
@@ -1545,7 +1564,7 @@ my $NP_del_ratio = "";
 my $mismatch_percentage = "";
 my $ins_percentage = "";
 my $del_percentage = "";
-    
+
 if ($NP_coverage > 0)
 {
     my $NP_ERROR;
@@ -1932,12 +1951,7 @@ my $NP_range_high = $NP_range[1];
 my $output2 = $output."_";
 my $output_NP = $output2."Reads_".$project.".fasta";
 
-my %NP_seq_length;
-undef %NP_seq_length;
-my %NP_seq_length1;
-undef %NP_seq_length1;
-my %NP_seq_length2;
-undef %NP_seq_length2;
+
 
 $NP_accuracy =~ tr/,/./;
 if ($NP_accuracy =~ m/^(\d+\.*\d*)%*.*$/)
@@ -2082,7 +2096,10 @@ $pm->run_on_finish(
 REF:while (my $line = <$FILE_REF>)
 {
     chomp $line;
+    $line =~ tr/\r//d;
+    $line =~ s/\R/\012/;
 #my $time_start_tmp = time;
+
     my $progress = ($reference_size2/$reference_size)*100;
     $progress += 1;
     $progress_print = int($progress)."%";
@@ -2191,7 +2208,7 @@ REF:while (my $line = <$FILE_REF>)
                 $TRA_contig_select = $chromosome;
                 $TRA_contig_select2 = $line_tmp2;
             }          
-        }        
+        }  
         next REF;
     }     
     #$line =~ tr/actgn/ACTGN/;
@@ -2201,7 +2218,6 @@ NEW_CONTIG0:
     if ($first eq '>' || $first eq '@')
     {
 #print chromosome to haplo files-------------------------------------------------------------------------------------------------    
-        
         if ($translocating eq "yes")
         {
             $translocating = "";
@@ -2274,7 +2290,6 @@ NEW_CONTIG0:
 #-------------------------------------------------------------------------------------------------------------------------------------------------------        
 #Simulate Nanopore reads START PARALLEL LOOP------------------------------------------------------------------------------------------------------------
 #-------------------------------------------------------------------------------------------------------------------------------------------------------
-
         if ($NP_coverage > 0)
         {
             foreach my $haps_tmp (sort keys %haps)
@@ -2352,12 +2367,13 @@ NEW_CONTIG0:
                 {                
                     my $o = '0';
                     my $d = '0';    
+                    
                     my $count_seqs = keys %NP_seq_length;
     
                     while ($o < $NP_coverage_tmp-$count_seqs)
                     {
                         $NP_read_count++;
-    NP_LENGTH0:      
+                        
                         my $random_NP_length = '0';
                         if (exists($NP_extra_long_reads{$NP_read_count}))
                         {
@@ -2381,10 +2397,6 @@ NEW_CONTIG0:
                         }
                         $NP_total_length_tmp += $random_NP_length;
             
-                        if (exists($NP_seq_length{$random_NP_length+$shortest_seq1}))
-                        {
-                            goto NP_LENGTH0;
-                        }
                         my $chance_sense = int(rand(2));
                         my $seq_tmp = "";
                         if ($chance_sense eq '0')
@@ -2718,7 +2730,13 @@ NEW_CONTIG0:
                         print $OUTPUT_NP ">".$project."_".$NP_read_count."_length=".length($seq_tmp)."_HAP".$haps_tmp."\n";
                         print $OUTPUT_NP $seq_tmp."\n";
         
-                        $NP_seq_length{$shortest_seq1+$random_NP_length} = undef;
+                        my $read_length_tmp = $random_NP_length+$shortest_seq1;
+                        while (exists($NP_seq_length{$read_length_tmp}))
+                        {
+                            $read_length_tmp += 0.1;
+                        }
+                        $NP_seq_length{$read_length_tmp} = undef;
+                        $count_seqs = keys %NP_seq_length;
                         $o++;
                     }
                 
@@ -2853,915 +2871,920 @@ NEW_CONTIG0:
         }
         next REF;
     }
-#--------   
+#------------------------
     $line =~ tr/actgn/ACTGN/;
-    if ($translocating eq "yes")
+    
+    while (length($line) > 0)
     {
-        if (eof)
-        {
-            $new_contig = "yes";
-            goto NEW_CONTIG;
-        }
-        next REF;
-    }
+        my $seq_ref_line = substr $line, 0, 250, "";
 
-    my $last_nuc = "";
-    if ($ambigious_replace eq "yes")
-    {
-        $last_nuc = substr $line, -1, 1;
-    }
-    if (($first eq "N" && $last_nuc eq "N") && $ambigious_replace eq "yes")
-    {
-        my $line_tmp = "";
-        while (length($line_tmp) < length($line))
+        if ($translocating eq "yes")
+        {
+            if (eof)
+            {
+                $new_contig = "yes";
+                goto NEW_CONTIG;
+            }
+            next REF;
+        }
+    
+        my $last_nuc = "";
+        if ($ambigious_replace eq "yes")
+        {
+            $last_nuc = substr $seq_ref_line, -1, 1;
+        }
+        if (($first eq "N" && $last_nuc eq "N") && $ambigious_replace eq "yes")
+        {
+            my $line_tmp = "";
+            while (length($line_tmp) < length($seq_ref_line))
+            {
+                my $chance_tmp = int(rand(4));
+                my $nuc_tmp = $nucs[$chance_tmp];
+                $line_tmp .= $nuc_tmp; 
+            }
+            $seq_ref_line = $line_tmp;
+        }
+        elsif (($first eq "N" || $last_nuc eq "N") && $ambigious_replace eq "yes")
         {
             my $chance_tmp = int(rand(4));
             my $nuc_tmp = $nucs[$chance_tmp];
-            $line_tmp .= $nuc_tmp; 
-        }
-        $line = $line_tmp;
-    }
-    elsif (($first eq "N" || $last_nuc eq "N") && $ambigious_replace eq "yes")
-    {
-        my $chance_tmp = int(rand(4));
-        my $nuc_tmp = $nucs[$chance_tmp];
-        my $next_tmp = '1';
-        while ($next_tmp eq '1')
-        {
-            $next_tmp = $line =~ s/N/$nuc_tmp/;
-            $chance_tmp = int(rand(4));
-            $nuc_tmp = $nucs[$chance_tmp];
-        }
-    }
-#Translocating shit----------------------------------------------------------------------------------------------     
-
-    if ($first eq "N" && $next_pos >= $size_current_contig+length($line) && $deleting eq "" && $inverting eq "" && $duplicating eq "")
-    {
-
-        $reference_size2 += length($line);
-        $size_current_contig += length($line);
-        $haplotype1_print .= $line;
-        $haplotype2_print .= $line;
-        $haplo_merged_print .= $line;
-        next REF;
-    }
-   
-    if ($TRA_contig_select eq $chromosome && $contigs{$current_contig}-$size_current_contig < $random_length_TRA && $translocating eq "")
-    {
-        my $tra_seq = $TRA_sequences{$TRA_contig_select2};
-        my $check1 = "";
-        my $check2 = "";
-        my $hap_tmp = "1/1";
-        if (exists($TRA_hap1{$chromosome}))
-        {
-            $check1 = "yes";
-        }
-        if (exists($TRA_hap2{$chromosome}))
-        {
-            $check2 = "yes";
-        }
-        
-        while (length($tra_seq) > 0)
-        {
-            my $print_line = substr $tra_seq, 0, $length_fasta_line, "";
-            $haplo_merged_print .= $print_line;
-            $reference_size2 += length($print_line);
-            if ($check1 eq "yes")
+            my $next_tmp = '1';
+            while ($next_tmp eq '1')
             {
-                $haplotype1_print .= $print_line;
+                $next_tmp = $seq_ref_line =~ s/N/$nuc_tmp/;
+                $chance_tmp = int(rand(4));
+                $nuc_tmp = $nucs[$chance_tmp];
             }
-            if ($check2 eq "yes")
-            {
-                $haplotype2_print .= $print_line;
-            }        
         }
-        if ($check1 ne "yes" || $check2 ne "yes")
+#Translocating shit----------------------------------------------------------------------------------------------     
+    
+        if ($first eq "N" && $next_pos >= $size_current_contig+length($seq_ref_line) && $deleting eq "" && $inverting eq "" && $duplicating eq "")
         {
-            my $tra_seq2 = $TRA_sequences{$TRA_contig_select};
-            while (length($tra_seq2) > 0)
+    
+            $reference_size2 += length($seq_ref_line);
+            $size_current_contig += length($seq_ref_line);
+            $haplotype1_print .= $seq_ref_line;
+            $haplotype2_print .= $seq_ref_line;
+            $haplo_merged_print .= $seq_ref_line;
+            next REF;
+        }
+       
+        if ($TRA_contig_select eq $chromosome && $contigs{$current_contig}-$size_current_contig < $random_length_TRA && $translocating eq "")
+        {
+            my $tra_seq = $TRA_sequences{$TRA_contig_select2};
+            my $check1 = "";
+            my $check2 = "";
+            my $hap_tmp = "1/1";
+            if (exists($TRA_hap1{$chromosome}))
             {
-                my $print_line = substr $tra_seq2, 0, $length_fasta_line, "";
-                if ($check1 ne "yes")
+                $check1 = "yes";
+            }
+            if (exists($TRA_hap2{$chromosome}))
+            {
+                $check2 = "yes";
+            }
+            
+            while (length($tra_seq) > 0)
+            {
+                my $print_line = substr $tra_seq, 0, $length_fasta_line, "";
+                $haplo_merged_print .= $print_line;
+                $reference_size2 += length($print_line);
+                if ($check1 eq "yes")
                 {
                     $haplotype1_print .= $print_line;
-                    $hap_tmp = "1";
                 }
-                if ($check2 ne "yes")
+                if ($check2 eq "yes")
                 {
                     $haplotype2_print .= $print_line;
-                    $hap_tmp = "0";
-                }
+                }        
             }
-        }
-
-        $translocating = "yes";        
-        my $chromosome2 = $TRA_contig_select2;
-        
-        if (exists($TRA_hap_second{$chromosome}))
-        {}
-        else
-        {
-            print OUTPUT_VCF $chromosome.":".$chromosome2."\t".$size_current_contig."\t".$random_length_TRA."\tTRA\t".$hap_tmp."\n";
-        }
-        next REF;
-    }
-SELECT_SV:
-
-#Select type SV----------------------------------------------------------------------------------------------------------------        
-    if ($SV_input ne "")
-    {
-        if ($inverting eq "")
-        {
-            $inversion_seq = "";
-        }
-
-        if ($DEL_input_tmp eq '0')
-        {
-            $DEL_interval_tmp = $reference_size;
-        }
-        if ($INS_input_tmp eq '0')
-        {
-            $INS_interval_tmp = $reference_size;
-        }
-        if ($DUP_input_tmp eq '0')
-        {
-            $DUP_interval_tmp = $reference_size;
-        }
-        if ($INV_input_tmp eq '0')
-        {
-            $INV_interval_tmp = $reference_size;
-        }
-        if ($IDUP_input_tmp eq '0')
-        {
-            $IDUP_interval_tmp = $reference_size;
-        }
-        if ($CSUB_input_tmp eq '0')
-        {
-            $CSUB_interval_tmp = $reference_size;
-        }
-        if ($next_pos >= $size_current_contig && $next_pos < $size_current_contig+length($line) && $VCF_input ne "" && $next_type ne "")
-        {
-            $NEXT_SV = $next_type;
-
-            $VCF_input_now = "yes";
-            $next_length_minus = $next_pos-$size_current_contig;
-            $next_length_minus_save = $next_length_minus;
-            
-            if ($inverting ne "" || $duplicating ne "" || $deleting ne "")
+            if ($check1 ne "yes" || $check2 ne "yes")
             {
-                #print $NEXT_SV." ALARM\n";
-                #print $inverting." INV\n";
-                #print $duplicating." DUP\n";
-                #print $deleting." DEL\n";           
-                $SVs_whitin_1_line = "yes";
-            }
-            if ($size_current_contig eq "160654020")
+                my $tra_seq2 = $TRA_sequences{$TRA_contig_select};
+                while (length($tra_seq2) > 0)
                 {
-                    #print OUTPUT_LOG $next_length_minus." NLM\n";
-                }
-        }
-        elsif ($next_pos < $size_current_contig && $VCF_input ne "" && $inverting eq "" && $duplicating eq "" && $deleting eq "" && $next_pos ne "")
-        {
-            print OUTPUT_LOG $NEXT_SV." ALARM\n";
-            print OUTPUT_LOG $next_type." next_type\n";
-            print OUTPUT_LOG $next_pos." next_pos\n";
-            print OUTPUT_LOG $size_current_contig." CURRENT_C\n";
-            VCF_input_sub;
-        }
-        elsif ($NEXT_SV eq "" && $reference_size2 > $TOTAL_interval_tmp && $deleting eq "" && $inverting eq "" && $duplicating eq "")
-        {
-            if ($DEL_input_tmp > 0 && $DEL_interval_tmp <= $INS_interval_tmp && $DEL_interval_tmp <= $INV_interval_tmp && $DEL_interval_tmp <= $DUP_interval_tmp && $DEL_interval_tmp <= $CSUB_interval_tmp && $DEL_interval_tmp <= $IDUP_interval_tmp)
-            {
-                $NEXT_SV = "DEL";
-            }
-            elsif ($INS_input_tmp > 0 && $INS_interval_tmp <= $DEL_interval_tmp && $INS_interval_tmp <= $INV_interval_tmp && $INS_interval_tmp <= $DUP_interval_tmp && $INS_interval_tmp <= $CSUB_interval_tmp && $INS_interval_tmp <= $IDUP_interval_tmp)
-            {
-                $NEXT_SV = "INS";
-            }
-            elsif ($DUP_input_tmp > 0 && $DUP_interval_tmp <= $DEL_interval_tmp && $DUP_interval_tmp <= $INV_interval_tmp && $DUP_interval_tmp <= $INS_interval_tmp && $DUP_interval_tmp <= $CSUB_interval_tmp && $DUP_interval_tmp <= $IDUP_interval_tmp)
-            {
-                $NEXT_SV = "DUP";
-            }
-            elsif ($INV_input_tmp > 0 && $INV_interval_tmp <= $DEL_interval_tmp && $INV_interval_tmp <= $INS_interval_tmp && $INV_interval_tmp <= $DUP_interval_tmp && $INV_interval_tmp <= $CSUB_interval_tmp && $INV_interval_tmp <= $IDUP_interval_tmp)
-            {
-                $NEXT_SV = "INV";
-            }
-            elsif ($IDUP_input_tmp > 0 && $IDUP_interval_tmp <= $DEL_interval_tmp && $IDUP_interval_tmp <= $INS_interval_tmp && $IDUP_interval_tmp <= $DUP_interval_tmp && $IDUP_interval_tmp <= $INV_interval_tmp && $IDUP_interval_tmp <= $CSUB_interval_tmp)
-            {
-                $NEXT_SV = "IDUP";
-            }
-            elsif ($CSUB_input_tmp > 0 && $CSUB_interval_tmp <= $DEL_interval_tmp && $CSUB_interval_tmp <= $INS_interval_tmp && $CSUB_interval_tmp <= $DUP_interval_tmp && $CSUB_interval_tmp <= $INV_interval_tmp && $CSUB_interval_tmp <= $IDUP_interval_tmp)
-            {
-                $NEXT_SV = "CSUB";
-            }
-        }
-#Input SV------------------------------------------------------------------------------------------------------------------------                
-        if ($NEXT_SV ne "DEL" && $NEXT_SV ne "INV" && $NEXT_SV ne "INS" && $NEXT_SV ne "DUP" && $NEXT_SV ne "TRA" && $NEXT_SV ne "CSUB" && $NEXT_SV ne "IDUP" && $NEXT_SV ne "")
-        {
-            die "\n".$NEXT_SV.": This type of SV is not supported\n";
-        }
-#Deletions & Complex substitutions--------------------------------------------------------------------------------------------------------------------------------
-        if ((($NEXT_SV eq "DEL" && (($reference_size2 > $random_length_interval && $DEL_input_tmp > 0 && $deleting eq "") || $VCF_input_now eq "yes")) ||
-            ($NEXT_SV eq "CSUB" && (($reference_size2 > $random_length_interval && $CSUB_input_tmp > 0 && $deleting eq "") || $VCF_input_now eq "yes"))) && $SVs_whitin_1_line ne "yes")
-        {
-            if ($VCF_input_now eq "yes")
-            {
-                goto VCF_INPUT_DEL;
-            }
-            my $w=0;
-            $w =rand(15);
-            my $distribution = int($w); 
-            my $random_length = "50";
-            
-            if ($distribution > -1 && $distribution < 9)
-            {
-DEL_RANGE2:
-                my $t=0;
-                $t+=rand() for(2..11);
-                #my $random_length = int($t*60+1);
-                $random_length = int((2**($t*1.3))-10);
-                if ($random_length > 1000 || $random_length < 30)
-                {
-                    goto DEL_RANGE2;
-                }
-                elsif ($random_length < $DEL_range_low)
-                {
-                    goto DEL_RANGE2;
-                }
-            }
-            elsif ($distribution > 8 && $distribution < 10)
-            {
-DEL_RANGE2b:
-                my $s=0;
-                $s+=rand() for(-1.5..1.5);
-                $random_length = int($s*30+300);
-                if ($random_length < $DEL_range_low)
-                {
-                    goto DEL_RANGE2b;
-                }
-            }
-            else
-            {
-DEL_RANGE3:                
-                my $s=0;
-                $s+=rand() for(0..4);
-                $random_length = int($s*($DEL_range_high/2.5))-$DEL_range_high+15;
-                if ($random_length < $DEL_range_low)
-                {
-                    goto DEL_RANGE3;
-                }           
-            }
-            $random_length_DEL = $random_length;
-VCF_INPUT_DEL:
-
-            my $pos_tmp = $size_current_contig;
-            
-            my $line_tmp = $line;
-            if ($VCF_input_now eq "yes")
-            {
-                $random_length_DEL = $next_length;
-                $pos_tmp = $next_pos;
-                
-                my $next_length_start = "";
-                
-                if ($next_length_minus > 0)
-                {
-                    $next_length_start = substr $line_tmp, 0, $next_length_minus, "";
-                }
-                VCF_input_sub $next_length_start; 
-            }
-            if ($hap eq "" && $heterozygosity ne "no")
-            {
-                hap
-            }
-     
-            if ($random_length_DEL <= length($line)-$next_length_minus)
-            {
-                substr $line_tmp, 0, $random_length_DEL, "";
-
-                if ($NEXT_SV eq "CSUB")
-                {
-                    if (exists($foreign_contigs{$SEQ}) && exists($sequences_foreign{$pos_tmp}))
+                    my $print_line = substr $tra_seq2, 0, $length_fasta_line, "";
+                    if ($check1 ne "yes")
                     {
-                        insert_seq ($random_length_DEL,$foreign_contigs{$SEQ});
+                        $haplotype1_print .= $print_line;
+                        $hap_tmp = "1";
                     }
-                    elsif (exists($sequences_final{$SEQ}))
+                    if ($check2 ne "yes")
                     {
-                        insert_seq ($random_length_DEL,$sequences_final{$SEQ});
-                    }
-                    else
-                    {
-                        insert_seq ($random_length_DEL);
-                    }                  
-                }
-
-                $variation_haplo .= $line_tmp;
-                $finish_var = "yes";
-            }
-            else
-            {
-                $deleting = length($line)-$next_length_minus;
-                if ($NEXT_SV eq "CSUB")
-                {
-                    $csubbing = "yes";
-                }
-            }
-            $next_length_minus = '0';
-            
-            if ($NEXT_SV eq "DEL")
-            {
-                $DEL_input_tmp--;
-                $DEL_interval_tmp = $DEL_interval+$reference_size2;
-                $random_length_interval = int(rand($TOTAL_interval-2000-$random_length_DEL)) + 2000 + $random_length_DEL + $reference_size2;
-                print OUTPUT_VCF $chromosome."\t".$pos_tmp."\t".$random_length_DEL."\tDEL\t".$hap."\t".$SEQ."\n";
-                $VCF_output{$pos_tmp} = undef;
-                
-                my $range_graph = int(int($random_length_DEL)/15);
-                if (exists($graph_DEL{$range_graph}))
-                { 
-                    my $f = $graph_DEL{$range_graph}+1;
-                    $graph_DEL{$range_graph} = $f;
-                }
-                else
-                {
-                    $graph_DEL{$range_graph} = 1;
-                }
-            }
-            else
-            {
-                $CSUB_input_tmp--;
-                $CSUB_interval_tmp = $CSUB_interval+$reference_size2;
-                $random_length_interval = int(rand($TOTAL_interval-2000)) + 2000 + $reference_size2;
-                print OUTPUT_VCF $chromosome."\t".$pos_tmp."\t".$random_length_DEL."\tCSUB\t".$hap."\t".$SEQ."\n";
-                $VCF_output{$pos_tmp} = undef;
-            }
-            $TOTAL_interval_tmp = $TOTAL_interval+$reference_size2;
-            $NEXT_SV = "";
-            $ref_haplo .= $line;
-        }
-        elsif ($deleting < $random_length_DEL && $deleting ne "")
-        { 
-            $ref_haplo .= $line;
-            if ($random_length_DEL-$deleting <= length($line))
-            {
-                my $line_tmp = $line;
-                substr $line_tmp, 0, $random_length_DEL-$deleting, "";
-                
-                if ($csubbing eq "yes")
-                {
-                    $csubbing = "";
-                    if (exists($foreign_contigs{$SEQ}))
-                    {
-                        insert_seq ($random_length_DEL,$foreign_contigs{$SEQ});
-                    }
-                    elsif (exists($sequences_final{$SEQ}))
-                    {
-                        insert_seq ($random_length_DEL,$sequences_final{$SEQ});
-                    }
-                    else
-                    {
-                        insert_seq ($random_length_DEL);
+                        $haplotype2_print .= $print_line;
+                        $hap_tmp = "0";
                     }
                 }
-                $deleting = "";
-                $finish_var = "yes";
-                if ($SVs_whitin_1_line eq "yes")
-                {
-                    $SVs_whitin_1_line_length = length($line);
-                    $line = $line_tmp;
-                    goto TRA_SKIP;
-                }
-
-                $variation_haplo .= $line_tmp;  
             }
-            else
-            {
-                $deleting += length($line);
-            } 
-        }
-#Insertions and inverted duplications----------------------------------------------------------------------------------------------
-        elsif ((($NEXT_SV eq "INS" && (($reference_size2 > $random_length_interval && $INS_input_tmp > 0) || $VCF_input_now eq "yes")) ||
-               ($NEXT_SV eq "IDUP" && $VCF_input_now eq "yes")) && $SVs_whitin_1_line ne "yes")
-        { 
-            my $insert = "";          
-            $random_length_INS = "50";
-
-            my $next_length_end = "";
-            if ($VCF_input_now eq "yes")
-            {
-                $random_length_INS = $next_length;
     
-                $next_length_end = $line;
-
-                my $next_length_start = "";
-                if ($next_length_minus > 0)
+            $translocating = "yes";        
+            my $chromosome2 = $TRA_contig_select2;
+            
+            if (exists($TRA_hap_second{$chromosome}))
+            {}
+            else
+            {
+                print OUTPUT_VCF $chromosome.":".$chromosome2."\t".$size_current_contig."\t".$random_length_TRA."\tTRA\t".$hap_tmp."\n";
+            }
+            next REF;
+        }
+SELECT_SV:
+    
+#Select type SV----------------------------------------------------------------------------------------------------------------        
+        if ($SV_input ne "")
+        {
+            if ($inverting eq "")
+            {
+                $inversion_seq = "";
+            }
+    
+            if ($DEL_input_tmp eq '0')
+            {
+                $DEL_interval_tmp = $reference_size;
+            }
+            if ($INS_input_tmp eq '0')
+            {
+                $INS_interval_tmp = $reference_size;
+            }
+            if ($DUP_input_tmp eq '0')
+            {
+                $DUP_interval_tmp = $reference_size;
+            }
+            if ($INV_input_tmp eq '0')
+            {
+                $INV_interval_tmp = $reference_size;
+            }
+            if ($IDUP_input_tmp eq '0')
+            {
+                $IDUP_interval_tmp = $reference_size;
+            }
+            if ($CSUB_input_tmp eq '0')
+            {
+                $CSUB_interval_tmp = $reference_size;
+            }
+            if ($next_pos >= $size_current_contig && $next_pos < $size_current_contig+length($seq_ref_line) && $VCF_input ne "" && $next_type ne "")
+            {
+                $NEXT_SV = $next_type;
+    
+                $VCF_input_now = "yes";
+                $next_length_minus = $next_pos-$size_current_contig;
+                $next_length_minus_save = $next_length_minus;
+                
+                if ($inverting ne "" || $duplicating ne "" || $deleting ne "")
                 {
-                    $next_length_start = substr $next_length_end, 0, $next_length_minus, "";
+                    #print $NEXT_SV." ALARM\n";
+                    #print $inverting." INV\n";
+                    #print $duplicating." DUP\n";
+                    #print $deleting." DEL\n";           
+                    $SVs_whitin_1_line = "yes";
                 }
-
-                $variation_haplo .= $next_length_start;
-
-                print OUTPUT_VCF $chromosome."\t".$next_pos."\t".$random_length_INS."\t".$next_type."\t".$next_hap."\t".$next_seq."\n";
-                $VCF_output{$next_pos} = undef;
-
-                if (exists($foreign_contigs{$next_seq}) && exists($sequences_foreign{$next_pos}))
+                if ($size_current_contig eq "160654020")
+                    {
+                        #print OUTPUT_LOG $next_length_minus." NLM\n";
+                    }
+            }
+            elsif ($next_pos < $size_current_contig && $VCF_input ne "" && $inverting eq "" && $duplicating eq "" && $deleting eq "" && $next_pos ne "")
+            {
+                print OUTPUT_LOG $NEXT_SV." ALARM\n";
+                print OUTPUT_LOG $next_type." next_type\n";
+                print OUTPUT_LOG $next_pos." next_pos\n";
+                print OUTPUT_LOG $size_current_contig." CURRENT_C\n";
+                VCF_input_sub;
+            }
+            elsif ($NEXT_SV eq "" && $reference_size2 > $TOTAL_interval_tmp && $deleting eq "" && $inverting eq "" && $duplicating eq "")
+            {
+                if ($DEL_input_tmp > 0 && $DEL_interval_tmp <= $INS_interval_tmp && $DEL_interval_tmp <= $INV_interval_tmp && $DEL_interval_tmp <= $DUP_interval_tmp && $DEL_interval_tmp <= $CSUB_interval_tmp && $DEL_interval_tmp <= $IDUP_interval_tmp)
                 {
-                    $insert = $sequences_foreign{$next_pos};
+                    $NEXT_SV = "DEL";
                 }
-                elsif (exists($sequences_final{$next_seq}))
+                elsif ($INS_input_tmp > 0 && $INS_interval_tmp <= $DEL_interval_tmp && $INS_interval_tmp <= $INV_interval_tmp && $INS_interval_tmp <= $DUP_interval_tmp && $INS_interval_tmp <= $CSUB_interval_tmp && $INS_interval_tmp <= $IDUP_interval_tmp)
                 {
-                   $insert = $sequences_final{$next_seq};
+                    $NEXT_SV = "INS";
                 }
-                my $insert_tmp = $insert;
-                if ($NEXT_SV eq "IDUP")
+                elsif ($DUP_input_tmp > 0 && $DUP_interval_tmp <= $DEL_interval_tmp && $DUP_interval_tmp <= $INV_interval_tmp && $DUP_interval_tmp <= $INS_interval_tmp && $DUP_interval_tmp <= $CSUB_interval_tmp && $DUP_interval_tmp <= $IDUP_interval_tmp)
                 {
-                    $insert = reverse($insert_tmp);
+                    $NEXT_SV = "DUP";
+                }
+                elsif ($INV_input_tmp > 0 && $INV_interval_tmp <= $DEL_interval_tmp && $INV_interval_tmp <= $INS_interval_tmp && $INV_interval_tmp <= $DUP_interval_tmp && $INV_interval_tmp <= $CSUB_interval_tmp && $INV_interval_tmp <= $IDUP_interval_tmp)
+                {
+                    $NEXT_SV = "INV";
+                }
+                elsif ($IDUP_input_tmp > 0 && $IDUP_interval_tmp <= $DEL_interval_tmp && $IDUP_interval_tmp <= $INS_interval_tmp && $IDUP_interval_tmp <= $DUP_interval_tmp && $IDUP_interval_tmp <= $INV_interval_tmp && $IDUP_interval_tmp <= $CSUB_interval_tmp)
+                {
+                    $NEXT_SV = "IDUP";
+                }
+                elsif ($CSUB_input_tmp > 0 && $CSUB_interval_tmp <= $DEL_interval_tmp && $CSUB_interval_tmp <= $INS_interval_tmp && $CSUB_interval_tmp <= $DUP_interval_tmp && $CSUB_interval_tmp <= $INV_interval_tmp && $CSUB_interval_tmp <= $IDUP_interval_tmp)
+                {
+                    $NEXT_SV = "CSUB";
                 }
             }
-            if ($VCF_input_now eq "")
+#Input SV------------------------------------------------------------------------------------------------------------------------                
+            if ($NEXT_SV ne "DEL" && $NEXT_SV ne "INV" && $NEXT_SV ne "INS" && $NEXT_SV ne "DUP" && $NEXT_SV ne "TRA" && $NEXT_SV ne "CSUB" && $NEXT_SV ne "IDUP" && $NEXT_SV ne "")
             {
-                $INS_input_tmp--;
+                die "\n".$NEXT_SV.": This type of SV is not supported\n";
+            }
+#Deletions & Complex substitutions--------------------------------------------------------------------------------------------------------------------------------
+            if ((($NEXT_SV eq "DEL" && (($reference_size2 > $random_length_interval && $DEL_input_tmp > 0 && $deleting eq "") || $VCF_input_now eq "yes")) ||
+                ($NEXT_SV eq "CSUB" && (($reference_size2 > $random_length_interval && $CSUB_input_tmp > 0 && $deleting eq "") || $VCF_input_now eq "yes"))) && $SVs_whitin_1_line ne "yes")
+            {
+                if ($VCF_input_now eq "yes")
+                {
+                    goto VCF_INPUT_DEL;
+                }
                 my $w=0;
                 $w =rand(15);
-                my $distribution = int($w);
-                            
+                my $distribution = int($w); 
+                my $random_length = "50";
+                
                 if ($distribution > -1 && $distribution < 9)
                 {
-INS_RANGE2:
+DEL_RANGE2:
                     my $t=0;
                     $t+=rand() for(2..11);
                     #my $random_length = int($t*60+1);
-                    $random_length_INS = int((2**($t*1.3))-10);
-                    if ($random_length_INS > 1500 || $random_length_INS < 30)
+                    $random_length = int((2**($t*1.3))-10);
+                    if ($random_length > 1000 || $random_length < 30)
                     {
-                        goto INS_RANGE2;
+                        goto DEL_RANGE2;
                     }
-                    elsif ($random_length_INS < $INS_range_low)
+                    elsif ($random_length < $DEL_range_low)
                     {
-                        goto INS_RANGE2;
+                        goto DEL_RANGE2;
                     }
                 }
                 elsif ($distribution > 8 && $distribution < 10)
                 {
-INS_RANGE2b:
+DEL_RANGE2b:
                     my $s=0;
                     $s+=rand() for(-1.5..1.5);
-                    $random_length_INS = int($s*30+300);
-                    if ($random_length_INS < $INS_range_low)
+                    $random_length = int($s*30+300);
+                    if ($random_length < $DEL_range_low)
                     {
-                        goto INS_RANGE2b;
+                        goto DEL_RANGE2b;
                     }
                 }
                 else
                 {
-INS_RANGE3:                
+DEL_RANGE3:                
                     my $s=0;
                     $s+=rand() for(0..4);
-                    $random_length_INS = int($s*($INS_range_high/2.5))-$INS_range_high+15;
-                    if ($random_length_INS < $INS_range_low)
+                    $random_length = int($s*($DEL_range_high/2.5))-$DEL_range_high+15;
+                    if ($random_length < $DEL_range_low)
                     {
-                        goto INS_RANGE3;
+                        goto DEL_RANGE3;
                     }           
+                }
+                $random_length_DEL = $random_length;
+VCF_INPUT_DEL:
+    
+                my $pos_tmp = $size_current_contig;
+                
+                my $line_tmp = $seq_ref_line;
+                if ($VCF_input_now eq "yes")
+                {
+                    $random_length_DEL = $next_length;
+                    $pos_tmp = $next_pos;
+                    
+                    my $next_length_start = "";
+                    
+                    if ($next_length_minus > 0)
+                    {
+                        $next_length_start = substr $line_tmp, 0, $next_length_minus, "";
+                    }
+                    VCF_input_sub $next_length_start; 
                 }
                 if ($hap eq "" && $heterozygosity ne "no")
                 {
                     hap
                 }
-                print OUTPUT_VCF $chromosome."\t".$size_current_contig."\t".$random_length_INS."\tINS\t".$hap."\t".$next_seq."\n";
-                $VCF_output{$size_current_contig} = undef;
-            }
-            
-            if ($NEXT_SV eq "INS")
-            {
-                my $range_graph = int($random_length_INS/15);
-                if (exists($graph_INS{$range_graph}))
-                { 
-                    my $f = $graph_INS{$range_graph}+1;
-                    $graph_INS{$range_graph} = $f;
-                }
-                else
-                {
-                    $graph_INS{$range_graph} = 1;
-                }
-            }            
-
-            insert_seq ($random_length_INS, $insert);
-    
-            my $line_tmp = $line;
-            if ($VCF_input_now eq "yes")
-            {
-                $line_tmp = $next_length_end;
-                VCF_input_sub;
-            }
-
-            $variation_haplo .= $line_tmp;
-            $ref_haplo .= $line;
-            $finish_var = "yes";
-
-            $next_length_minus = '0';
-            $TOTAL_interval_tmp = $TOTAL_interval+$reference_size2;
-            if ($NEXT_SV eq "INS")
-            {
-                $INS_interval_tmp = $INS_interval+$reference_size2;
-            }
-            else
-            {
-                $IDUP_interval_tmp = $IDUP_interval+$reference_size2;
-            }
-            $random_length_interval = int(rand($TOTAL_interval-2000)) + 2000 + $reference_size2;
-            $NEXT_SV = "";
-        }        
-#Duplications-and IDUP from random input---------------------------------------------------------------------------------------------
-        elsif (($NEXT_SV eq "DUP" && (($reference_size2 > $random_length_interval && $DUP_input_tmp > 0 && $duplicating eq "") || $VCF_input_now eq "yes")) ||
-               ($NEXT_SV eq "IDUP" && $reference_size2 > $random_length_interval && $IDUP_input_tmp > 0) && $SVs_whitin_1_line ne "yes")
-        {
-            if ($VCF_input_now eq "yes")
-            {
-                goto VCF_INPUT_DUP;
-            }
-            my $random_length = int(rand($DUP_range2)) + $DUP_range_low;
-            my $random_length_short = int(rand($DUP_range2_short)) + $DUP_range_low;
-            $random_length_DUP = $random_length_short;
-            $random_copies_DUP = int(rand($DUP_copies2)) + $DUP_copies_low;
-            if ($NEXT_SV eq "IDUP")
-            {
-                $random_copies_DUP = '0';
-                $random_length_DUP = int(rand($IDUP_range2)) + $IDUP_range_low;
-            }
-            else
-            {
-                $DUP_dis++;
-            }
-
-            if ($DUP_dis > 3 && $NEXT_SV eq "DUP")
-            {
-                $DUP_dis = '0';
-                $random_length_DUP = $random_length;
-            }
-VCF_INPUT_DUP:
-
-            my $pos_tmp = $size_current_contig;
-            my $line_tmp = $line;
-
-            if ($VCF_input_now eq "yes")
-            {
-                my @next_length = split /x/, $next_length;
-                $random_length_DUP = $next_length[0];
-                $random_copies_DUP = $next_length[1];
-                $pos_tmp = $next_pos;
          
-                my $next_length_start = "";
-                if ($next_length_minus > '0')
+                if ($random_length_DEL <= length($seq_ref_line)-$next_length_minus)
                 {
-                    $next_length_start = substr $line_tmp, 0, $next_length_minus, "";
-                }
-                VCF_input_sub $next_length_start;        
-            }
-            if ($hap eq "" && $heterozygosity ne "no")
-            {
-                hap
-            }
-            if ($NEXT_SV eq "DUP")
-            {
-                print OUTPUT_VCF $chromosome."\t".$pos_tmp."\t".$random_length_DUP."x".$random_copies_DUP."\t".$NEXT_SV."\t".$hap."\t".$SEQ."\n";
-            }
-            else
-            {
-                print OUTPUT_VCF $chromosome."\t".$pos_tmp."\t".$random_length_DUP."\t".$NEXT_SV."\t".$hap."\t".$SEQ."\n";
-            }
-            $VCF_output{$pos_tmp} = undef;
-            
-            if (exists($sequences_final{$SEQ}) || exists($foreign_contigs{$SEQ}))
-            {
-                my $duplication_tmp = $foreign_contigs{$SEQ};
-                if (exists($sequences_final{$SEQ}))
-                {
-                    $duplication_tmp = $sequences_final{$SEQ};
-                }
-                my $b = '1';
-                my $duplication = $duplication_tmp;
-                while ($b < $random_copies_DUP)
-                {
-                    $duplication .= $duplication_tmp;
-                    $b++;
-                }
-                my $duplication_tmp2 = $duplication;
-                if ($NEXT_SV eq "IDUP")
-                {
-                    $duplication = reverse($duplication_tmp2);
-                }
-
-                $variation_haplo .= $duplication;
-                $variation_haplo .= $line_tmp;
-                $finish_var = "yes";
-            }
-            elsif ($random_length_DUP <= length($line)-$next_length_minus)
-            {
-                my $duplication_tmp = substr $line_tmp, 0, $random_length_DUP, "";
-                
-                my $b = '0';
-                my $duplication = $duplication_tmp;
-                while ($b < $random_copies_DUP)
-                {
-                    $duplication .= $duplication_tmp;
-                    $b++;
-                }
-                my $duplication_tmp2 = $duplication;
-                if ($NEXT_SV eq "IDUP")
-                {
-                    $duplication = reverse($duplication_tmp2);
-                    $duplication =~ tr/ACTG/TGAC/;
-                }
-                
-                $variation_haplo .= $duplication;
-                $variation_haplo .= $line_tmp;
-                $finish_var = "yes";
-            }
-            else
-            {
-                $duplicating = length($line_tmp);
-                $duplication_seq .= $line_tmp;
-            }
-            $ref_haplo .= $line;
-                 
-            $next_length_minus = '0';
-            if ($NEXT_SV eq "IDUP")
-            {
-                $IDUP_input_tmp--;
-                $IDUP_interval_tmp = $IDUP_interval+$reference_size2;
-                $random_length_interval = int(rand($TOTAL_interval-2000-$random_length_DUP)) + $random_length_DUP + 2000 + $reference_size2;
-            }
-            else
-            {
-                $DUP_input_tmp--;
-                $DUP_interval_tmp = $DUP_interval+$reference_size2;
-                $random_length_interval = int(rand($TOTAL_interval-2000-($random_length_DUP*$random_copies_DUP))) + ($random_length_DUP*$random_copies_DUP) + 2000 + $reference_size2;
-            }             
-            
-            $TOTAL_interval_tmp = $TOTAL_interval+$reference_size2;               
-            $NEXT_SV = "";
-        }
-        elsif ($duplicating < $random_length_DUP && $duplicating ne "")
-        {             
-            $ref_haplo .= $line;
-            if ($random_length_DUP-$duplicating <= length($line))
-            {
-                my $line_tmp = $line;
-                my $duplication_tmp = substr $line_tmp, 0, $random_length_DUP-$duplicating, "";
-                $duplication_seq .= $duplication_tmp;
-
-                my $b = '1';
-                my $duplication = $duplication_seq;
-                while ($b < $random_copies_DUP)
-                {
-                    $duplication .= $duplication_seq;
-                    $b++;
-                }
-                
-                $duplicating = "";
-                $duplication_seq = "";
-                $finish_var = "yes";
-                
-                my $duplication_tmp2 = $duplication;
-                if ($NEXT_SV eq "IDUP")
-                {
-                    $duplication = reverse($duplication_tmp2);
-                    $duplication =~ tr/ACTG/TGAC/;
-                }
-                
-                if ($SVs_whitin_1_line eq "yes")
-                {
-                    $SVs_whitin_1_line_length = length($line);
-                    $line = $line_tmp;
-      
-                    $variation_haplo .= $duplication;
-                    goto TRA_SKIP;
-                }
-                
-                $variation_haplo .= $duplication;
-                $variation_haplo .= $line_tmp;
-            }
-            else
-            {
-               $duplicating += length($line);
-               $duplication_seq .= $line;
-            }
-        }
-#Inversions-------------------------------------------------------------------------------------------------------------------
-        elsif ($NEXT_SV eq "INV" && (($reference_size2 > $random_length_interval && $INV_input_tmp > 0 && $inverting eq "") || $VCF_input_now eq "yes") && $SVs_whitin_1_line ne "yes")
-        {
-            if ($VCF_input_now eq "yes")
-            {
-                goto VCF_INPUT_INV;
-            }
-INV_RANGE:
-            my $t=0;
-            $t+=rand() for(-1..1);
-            #my $random_length = int($t*60+1);
-            $random_length_INV = 23*int(2**($t*6));
-            #print $contigs{$current_contig}." CC\n";
-            #print $size_current_contig." CN\n";
- 
-            if ($random_length_INV > $INV_range_high || $random_length_INV < $INV_range_low || $random_length_INV > $contigs{$current_contig}-$size_current_contig)
-            {
-                goto INV_RANGE;
-            }
-
-           # my $s=0;
-            #$s+=rand() for(0..9);
-           # $random_length_INV = int($s*(($INV_range_high*1.3)/5))-($INV_range_high*1.3);
-           # if ($random_length_INV < $INV_range_low)
-           # {
-           #     goto INV_RANGE;
-           # } 
-            
-            if (exists($contigs{$current_contig}) && $contigs{$current_contig}-$size_current_contig < $random_length_INV)
-            {
-                if ($contigs{$current_contig}-$size_current_contig < 10000)
-                {
-                    $random_length_INV = $contigs{$current_contig}-$size_current_contig-500 
+                    substr $line_tmp, 0, $random_length_DEL, "";
+    
+                    if ($NEXT_SV eq "CSUB")
+                    {
+                        if (exists($foreign_contigs{$SEQ}) && exists($sequences_foreign{$pos_tmp}))
+                        {
+                            insert_seq ($random_length_DEL,$foreign_contigs{$SEQ});
+                        }
+                        elsif (exists($sequences_final{$SEQ}))
+                        {
+                            insert_seq ($random_length_DEL,$sequences_final{$SEQ});
+                        }
+                        else
+                        {
+                            insert_seq ($random_length_DEL);
+                        }                  
+                    }
+    
+                    $variation_haplo .= $line_tmp;
+                    $finish_var = "yes";
                 }
                 else
+                {
+                    $deleting = length($seq_ref_line)-$next_length_minus;
+                    if ($NEXT_SV eq "CSUB")
+                    {
+                        $csubbing = "yes";
+                    }
+                }
+                $next_length_minus = '0';
+                
+                if ($NEXT_SV eq "DEL")
+                {
+                    $DEL_input_tmp--;
+                    $DEL_interval_tmp = $DEL_interval+$reference_size2;
+                    $random_length_interval = int(rand($TOTAL_interval-2000-$random_length_DEL)) + 2000 + $random_length_DEL + $reference_size2;
+                    print OUTPUT_VCF $chromosome."\t".$pos_tmp."\t".$random_length_DEL."\tDEL\t".$hap."\t".$SEQ."\n";
+                    $VCF_output{$pos_tmp} = undef;
+                    
+                    my $range_graph = int(int($random_length_DEL)/15);
+                    if (exists($graph_DEL{$range_graph}))
+                    { 
+                        my $f = $graph_DEL{$range_graph}+1;
+                        $graph_DEL{$range_graph} = $f;
+                    }
+                    else
+                    {
+                        $graph_DEL{$range_graph} = 1;
+                    }
+                }
+                else
+                {
+                    $CSUB_input_tmp--;
+                    $CSUB_interval_tmp = $CSUB_interval+$reference_size2;
+                    $random_length_interval = int(rand($TOTAL_interval-2000)) + 2000 + $reference_size2;
+                    print OUTPUT_VCF $chromosome."\t".$pos_tmp."\t".$random_length_DEL."\tCSUB\t".$hap."\t".$SEQ."\n";
+                    $VCF_output{$pos_tmp} = undef;
+                }
+                $TOTAL_interval_tmp = $TOTAL_interval+$reference_size2;
+                $NEXT_SV = "";
+                $ref_haplo .= $seq_ref_line;
+            }
+            elsif ($deleting < $random_length_DEL && $deleting ne "")
+            { 
+                $ref_haplo .= $seq_ref_line;
+                if ($random_length_DEL-$deleting <= length($seq_ref_line))
+                {
+                    my $line_tmp = $seq_ref_line;
+                    substr $line_tmp, 0, $random_length_DEL-$deleting, "";
+                    
+                    if ($csubbing eq "yes")
+                    {
+                        $csubbing = "";
+                        if (exists($foreign_contigs{$SEQ}))
+                        {
+                            insert_seq ($random_length_DEL,$foreign_contigs{$SEQ});
+                        }
+                        elsif (exists($sequences_final{$SEQ}))
+                        {
+                            insert_seq ($random_length_DEL,$sequences_final{$SEQ});
+                        }
+                        else
+                        {
+                            insert_seq ($random_length_DEL);
+                        }
+                    }
+                    $deleting = "";
+                    $finish_var = "yes";
+                    if ($SVs_whitin_1_line eq "yes")
+                    {
+                        $SVs_whitin_1_line_length = length($seq_ref_line);
+                        $seq_ref_line = $line_tmp;
+                        goto TRA_SKIP;
+                    }
+    
+                    $variation_haplo .= $line_tmp;  
+                }
+                else
+                {
+                    $deleting += length($seq_ref_line);
+                } 
+            }
+#Insertions and inverted duplications----------------------------------------------------------------------------------------------
+            elsif ((($NEXT_SV eq "INS" && (($reference_size2 > $random_length_interval && $INS_input_tmp > 0) || $VCF_input_now eq "yes")) ||
+                   ($NEXT_SV eq "IDUP" && $VCF_input_now eq "yes")) && $SVs_whitin_1_line ne "yes")
+            { 
+                my $insert = "";          
+                $random_length_INS = "50";
+    
+                my $next_length_end = "";
+                if ($VCF_input_now eq "yes")
+                {
+                    $random_length_INS = $next_length;
+        
+                    $next_length_end = $seq_ref_line;
+    
+                    my $next_length_start = "";
+                    if ($next_length_minus > 0)
+                    {
+                        $next_length_start = substr $next_length_end, 0, $next_length_minus, "";
+                    }
+    
+                    $variation_haplo .= $next_length_start;
+    
+                    print OUTPUT_VCF $chromosome."\t".$next_pos."\t".$random_length_INS."\t".$next_type."\t".$next_hap."\t".$next_seq."\n";
+                    $VCF_output{$next_pos} = undef;
+    
+                    if (exists($foreign_contigs{$next_seq}) && exists($sequences_foreign{$next_pos}))
+                    {
+                        $insert = $sequences_foreign{$next_pos};
+                    }
+                    elsif (exists($sequences_final{$next_seq}))
+                    {
+                       $insert = $sequences_final{$next_seq};
+                    }
+                    my $insert_tmp = $insert;
+                    if ($NEXT_SV eq "IDUP")
+                    {
+                        $insert = reverse($insert_tmp);
+                    }
+                }
+                if ($VCF_input_now eq "")
+                {
+                    $INS_input_tmp--;
+                    my $w=0;
+                    $w =rand(15);
+                    my $distribution = int($w);
+                                
+                    if ($distribution > -1 && $distribution < 9)
+                    {
+INS_RANGE2:
+                        my $t=0;
+                        $t+=rand() for(2..11);
+                        #my $random_length = int($t*60+1);
+                        $random_length_INS = int((2**($t*1.3))-10);
+                        if ($random_length_INS > 1500 || $random_length_INS < 30)
+                        {
+                            goto INS_RANGE2;
+                        }
+                        elsif ($random_length_INS < $INS_range_low)
+                        {
+                            goto INS_RANGE2;
+                        }
+                    }
+                    elsif ($distribution > 8 && $distribution < 10)
+                    {
+INS_RANGE2b:
+                        my $s=0;
+                        $s+=rand() for(-1.5..1.5);
+                        $random_length_INS = int($s*30+300);
+                        if ($random_length_INS < $INS_range_low)
+                        {
+                            goto INS_RANGE2b;
+                        }
+                    }
+                    else
+                    {
+INS_RANGE3:                
+                        my $s=0;
+                        $s+=rand() for(0..4);
+                        $random_length_INS = int($s*($INS_range_high/2.5))-$INS_range_high+15;
+                        if ($random_length_INS < $INS_range_low)
+                        {
+                            goto INS_RANGE3;
+                        }           
+                    }
+                    if ($hap eq "" && $heterozygosity ne "no")
+                    {
+                        hap
+                    }
+                    print OUTPUT_VCF $chromosome."\t".$size_current_contig."\t".$random_length_INS."\tINS\t".$hap."\t".$next_seq."\n";
+                    $VCF_output{$size_current_contig} = undef;
+                }
+                
+                if ($NEXT_SV eq "INS")
+                {
+                    my $range_graph = int($random_length_INS/15);
+                    if (exists($graph_INS{$range_graph}))
+                    { 
+                        my $f = $graph_INS{$range_graph}+1;
+                        $graph_INS{$range_graph} = $f;
+                    }
+                    else
+                    {
+                        $graph_INS{$range_graph} = 1;
+                    }
+                }            
+    
+                insert_seq ($random_length_INS, $insert);
+        
+                my $line_tmp = $seq_ref_line;
+                if ($VCF_input_now eq "yes")
+                {
+                    $line_tmp = $next_length_end;
+                    VCF_input_sub;
+                }
+    
+                $variation_haplo .= $line_tmp;
+                $ref_haplo .= $seq_ref_line;
+                $finish_var = "yes";
+    
+                $next_length_minus = '0';
+                $TOTAL_interval_tmp = $TOTAL_interval+$reference_size2;
+                if ($NEXT_SV eq "INS")
+                {
+                    $INS_interval_tmp = $INS_interval+$reference_size2;
+                }
+                else
+                {
+                    $IDUP_interval_tmp = $IDUP_interval+$reference_size2;
+                }
+                $random_length_interval = int(rand($TOTAL_interval-2000)) + 2000 + $reference_size2;
+                $NEXT_SV = "";
+            }        
+    #Duplications-and IDUP from random input---------------------------------------------------------------------------------------------
+            elsif (($NEXT_SV eq "DUP" && (($reference_size2 > $random_length_interval && $DUP_input_tmp > 0 && $duplicating eq "") || $VCF_input_now eq "yes")) ||
+                   ($NEXT_SV eq "IDUP" && $reference_size2 > $random_length_interval && $IDUP_input_tmp > 0) && $SVs_whitin_1_line ne "yes")
+            {
+                if ($VCF_input_now eq "yes")
+                {
+                    goto VCF_INPUT_DUP;
+                }
+                my $random_length = int(rand($DUP_range2)) + $DUP_range_low;
+                my $random_length_short = int(rand($DUP_range2_short)) + $DUP_range_low;
+                $random_length_DUP = $random_length_short;
+                $random_copies_DUP = int(rand($DUP_copies2)) + $DUP_copies_low;
+                if ($NEXT_SV eq "IDUP")
+                {
+                    $random_copies_DUP = '0';
+                    $random_length_DUP = int(rand($IDUP_range2)) + $IDUP_range_low;
+                }
+                else
+                {
+                    $DUP_dis++;
+                }
+    
+                if ($DUP_dis > 3 && $NEXT_SV eq "DUP")
+                {
+                    $DUP_dis = '0';
+                    $random_length_DUP = $random_length;
+                }
+VCF_INPUT_DUP:
+    
+                my $pos_tmp = $size_current_contig;
+                my $line_tmp = $seq_ref_line;
+    
+                if ($VCF_input_now eq "yes")
+                {
+                    my @next_length = split /x/, $next_length;
+                    $random_length_DUP = $next_length[0];
+                    $random_copies_DUP = $next_length[1];
+                    $pos_tmp = $next_pos;
+             
+                    my $next_length_start = "";
+                    if ($next_length_minus > '0')
+                    {
+                        $next_length_start = substr $line_tmp, 0, $next_length_minus, "";
+                    }
+                    VCF_input_sub $next_length_start;        
+                }
+                if ($hap eq "" && $heterozygosity ne "no")
+                {
+                    hap
+                }
+                if ($NEXT_SV eq "DUP")
+                {
+                    print OUTPUT_VCF $chromosome."\t".$pos_tmp."\t".$random_length_DUP."x".$random_copies_DUP."\t".$NEXT_SV."\t".$hap."\t".$SEQ."\n";
+                }
+                else
+                {
+                    print OUTPUT_VCF $chromosome."\t".$pos_tmp."\t".$random_length_DUP."\t".$NEXT_SV."\t".$hap."\t".$SEQ."\n";
+                }
+                $VCF_output{$pos_tmp} = undef;
+                
+                if (exists($sequences_final{$SEQ}) || exists($foreign_contigs{$SEQ}))
+                {
+                    my $duplication_tmp = $foreign_contigs{$SEQ};
+                    if (exists($sequences_final{$SEQ}))
+                    {
+                        $duplication_tmp = $sequences_final{$SEQ};
+                    }
+                    my $b = '1';
+                    my $duplication = $duplication_tmp;
+                    while ($b < $random_copies_DUP)
+                    {
+                        $duplication .= $duplication_tmp;
+                        $b++;
+                    }
+                    my $duplication_tmp2 = $duplication;
+                    if ($NEXT_SV eq "IDUP")
+                    {
+                        $duplication = reverse($duplication_tmp2);
+                    }
+    
+                    $variation_haplo .= $duplication;
+                    $variation_haplo .= $line_tmp;
+                    $finish_var = "yes";
+                }
+                elsif ($random_length_DUP <= length($seq_ref_line)-$next_length_minus)
+                {
+                    my $duplication_tmp = substr $line_tmp, 0, $random_length_DUP, "";
+                    
+                    my $b = '0';
+                    my $duplication = $duplication_tmp;
+                    while ($b < $random_copies_DUP)
+                    {
+                        $duplication .= $duplication_tmp;
+                        $b++;
+                    }
+                    my $duplication_tmp2 = $duplication;
+                    if ($NEXT_SV eq "IDUP")
+                    {
+                        $duplication = reverse($duplication_tmp2);
+                        $duplication =~ tr/ACTG/TGAC/;
+                    }
+                    
+                    $variation_haplo .= $duplication;
+                    $variation_haplo .= $line_tmp;
+                    $finish_var = "yes";
+                }
+                else
+                {
+                    $duplicating = length($line_tmp);
+                    $duplication_seq .= $line_tmp;
+                }
+                $ref_haplo .= $seq_ref_line;
+                     
+                $next_length_minus = '0';
+                if ($NEXT_SV eq "IDUP")
+                {
+                    $IDUP_input_tmp--;
+                    $IDUP_interval_tmp = $IDUP_interval+$reference_size2;
+                    $random_length_interval = int(rand($TOTAL_interval-2000-$random_length_DUP)) + $random_length_DUP + 2000 + $reference_size2;
+                }
+                else
+                {
+                    $DUP_input_tmp--;
+                    $DUP_interval_tmp = $DUP_interval+$reference_size2;
+                    $random_length_interval = int(rand($TOTAL_interval-2000-($random_length_DUP*$random_copies_DUP))) + ($random_length_DUP*$random_copies_DUP) + 2000 + $reference_size2;
+                }             
+                
+                $TOTAL_interval_tmp = $TOTAL_interval+$reference_size2;               
+                $NEXT_SV = "";
+            }
+            elsif ($duplicating < $random_length_DUP && $duplicating ne "")
+            {             
+                $ref_haplo .= $seq_ref_line;
+                if ($random_length_DUP-$duplicating <= length($seq_ref_line))
+                {
+                    my $line_tmp = $seq_ref_line;
+                    my $duplication_tmp = substr $line_tmp, 0, $random_length_DUP-$duplicating, "";
+                    $duplication_seq .= $duplication_tmp;
+    
+                    my $b = '1';
+                    my $duplication = $duplication_seq;
+                    while ($b < $random_copies_DUP)
+                    {
+                        $duplication .= $duplication_seq;
+                        $b++;
+                    }
+                    
+                    $duplicating = "";
+                    $duplication_seq = "";
+                    $finish_var = "yes";
+                    
+                    my $duplication_tmp2 = $duplication;
+                    if ($NEXT_SV eq "IDUP")
+                    {
+                        $duplication = reverse($duplication_tmp2);
+                        $duplication =~ tr/ACTG/TGAC/;
+                    }
+                    
+                    if ($SVs_whitin_1_line eq "yes")
+                    {
+                        $SVs_whitin_1_line_length = length($seq_ref_line);
+                        $seq_ref_line = $line_tmp;
+          
+                        $variation_haplo .= $duplication;
+                        goto TRA_SKIP;
+                    }
+                    
+                    $variation_haplo .= $duplication;
+                    $variation_haplo .= $line_tmp;
+                }
+                else
+                {
+                   $duplicating += length($seq_ref_line);
+                   $duplication_seq .= $seq_ref_line;
+                }
+            }
+#Inversions-------------------------------------------------------------------------------------------------------------------
+            elsif ($NEXT_SV eq "INV" && (($reference_size2 > $random_length_interval && $INV_input_tmp > 0 && $inverting eq "") || $VCF_input_now eq "yes") && $SVs_whitin_1_line ne "yes")
+            {
+                if ($VCF_input_now eq "yes")
+                {
+                    goto VCF_INPUT_INV;
+                }
+INV_RANGE:
+                my $t=0;
+                $t+=rand() for(-1..1);
+                #my $random_length = int($t*60+1);
+                $random_length_INV = 23*int(2**($t*6));
+                #print $contigs{$current_contig}." CC\n";
+                #print $size_current_contig." CN\n";
+     
+                if ($random_length_INV > $INV_range_high || $random_length_INV < $INV_range_low || $random_length_INV > $contigs{$current_contig}-$size_current_contig)
                 {
                     goto INV_RANGE;
                 }
-            }
-VCF_INPUT_INV:
-            my $pos_tmp = $size_current_contig;
-            my $line_tmp = $line;
-            if ($VCF_input_now eq "yes")
-            {
-                $random_length_INV = $next_length;
-                $pos_tmp = $next_pos;
+    
+               # my $s=0;
+                #$s+=rand() for(0..9);
+               # $random_length_INV = int($s*(($INV_range_high*1.3)/5))-($INV_range_high*1.3);
+               # if ($random_length_INV < $INV_range_low)
+               # {
+               #     goto INV_RANGE;
+               # } 
                 
-                my $next_length_start = "";
-                if ($next_length_minus > '0')
+                if (exists($contigs{$current_contig}) && $contigs{$current_contig}-$size_current_contig < $random_length_INV)
                 {
-                    $next_length_start = substr $line_tmp, 0, $next_length_minus, "";
+                    if ($contigs{$current_contig}-$size_current_contig < 10000)
+                    {
+                        $random_length_INV = $contigs{$current_contig}-$size_current_contig-500 
+                    }
+                    else
+                    {
+                        goto INV_RANGE;
+                    }
                 }
-                VCF_input_sub $next_length_start;
-            }
-            if ($hap eq "" && $heterozygosity ne "no")
-            {
-                hap
-            }
-            print OUTPUT_VCF $chromosome."\t".$pos_tmp."\t".$random_length_INV."\tINV\t".$hap."\t".$SEQ."\n";
-            $VCF_output{$pos_tmp} = undef;
-                      
-            if (exists($graph_INV2{$random_length_INV}))
-            { 
-                my $f = $graph_INV2{$random_length_INV}+1;
-                $graph_INV2{$random_length_INV} = $f;
-            }
-            else
-            {
-                $graph_INV2{$random_length_INV} = 1;
-            }
-            
-            if ($random_length_INV <= length($line))
-            {
-                my $inversion_tmp = substr $line_tmp, 0, $random_length_INV, "";
-                my $inversion = reverse($inversion_tmp);
-                $inversion =~ tr/ACTG/TGAC/;
-
-                $variation_haplo .= $inversion;
-                $variation_haplo .= $line_tmp;
-                $finish_var = "yes";
-            }
-            else
-            {
-                $inverting = length($line_tmp);
-                $inversion_seq .= $line_tmp;
-            }
-
-            $next_length_minus = '0';
-            $INV_input_tmp--;
-            $TOTAL_interval_tmp = $TOTAL_interval+$reference_size2;
-            $INV_interval_tmp = $INV_interval+$reference_size2;
-            $random_length_interval = int(rand($TOTAL_interval-2000-$random_length_INV)) + $random_length_INV + 2000 + $reference_size2;
-            $NEXT_SV = "";
-            $ref_haplo .= $line;
-        }
-        elsif ($inverting < $random_length_INV && $inverting ne "")
-        {             
-            $ref_haplo .= $line;
-            if ($random_length_INV-$inverting <= length($line))
-            {
-                my $line_tmp = $line;
-                my $inversion_tmp = substr $line_tmp, 0, $random_length_INV-$inverting, "";
-                $inversion_seq .= $inversion_tmp;
-                my $inversion = reverse($inversion_seq);
-                $inversion =~ tr/ACTG/TGAC/;
-                $inverting = "";
-                $finish_var = "yes";
-
-                if ($SVs_whitin_1_line eq "yes")
+VCF_INPUT_INV:
+                my $pos_tmp = $size_current_contig;
+                my $line_tmp = $seq_ref_line;
+                if ($VCF_input_now eq "yes")
                 {
-                    $SVs_whitin_1_line_length = length($line);
-                    $line = $line_tmp;
+                    $random_length_INV = $next_length;
+                    $pos_tmp = $next_pos;
+                    
+                    my $next_length_start = "";
+                    if ($next_length_minus > '0')
+                    {
+                        $next_length_start = substr $line_tmp, 0, $next_length_minus, "";
+                    }
+                    VCF_input_sub $next_length_start;
+                }
+                if ($hap eq "" && $heterozygosity ne "no")
+                {
+                    hap
+                }
+                print OUTPUT_VCF $chromosome."\t".$pos_tmp."\t".$random_length_INV."\tINV\t".$hap."\t".$SEQ."\n";
+                $VCF_output{$pos_tmp} = undef;
+                          
+                if (exists($graph_INV2{$random_length_INV}))
+                { 
+                    my $f = $graph_INV2{$random_length_INV}+1;
+                    $graph_INV2{$random_length_INV} = $f;
+                }
+                else
+                {
+                    $graph_INV2{$random_length_INV} = 1;
+                }
+                
+                if ($random_length_INV <= length($seq_ref_line))
+                {
+                    my $inversion_tmp = substr $line_tmp, 0, $random_length_INV, "";
+                    my $inversion = reverse($inversion_tmp);
+                    $inversion =~ tr/ACTG/TGAC/;
+    
                     $variation_haplo .= $inversion;
-                    goto TRA_SKIP;
+                    $variation_haplo .= $line_tmp;
+                    $finish_var = "yes";
                 }
-                $variation_haplo .= $inversion;
-                $variation_haplo .= $line_tmp;      
+                else
+                {
+                    $inverting = length($line_tmp);
+                    $inversion_seq .= $line_tmp;
+                }
+    
+                $next_length_minus = '0';
+                $INV_input_tmp--;
+                $TOTAL_interval_tmp = $TOTAL_interval+$reference_size2;
+                $INV_interval_tmp = $INV_interval+$reference_size2;
+                $random_length_interval = int(rand($TOTAL_interval-2000-$random_length_INV)) + $random_length_INV + 2000 + $reference_size2;
+                $NEXT_SV = "";
+                $ref_haplo .= $seq_ref_line;
+            }
+            elsif ($inverting < $random_length_INV && $inverting ne "")
+            {             
+                $ref_haplo .= $seq_ref_line;
+                if ($random_length_INV-$inverting <= length($seq_ref_line))
+                {
+                    my $line_tmp = $seq_ref_line;
+                    my $inversion_tmp = substr $line_tmp, 0, $random_length_INV-$inverting, "";
+                    $inversion_seq .= $inversion_tmp;
+                    my $inversion = reverse($inversion_seq);
+                    $inversion =~ tr/ACTG/TGAC/;
+                    $inverting = "";
+                    $finish_var = "yes";
+    
+                    if ($SVs_whitin_1_line eq "yes")
+                    {
+                        $SVs_whitin_1_line_length = length($seq_ref_line);
+                        $seq_ref_line = $line_tmp;
+                        $variation_haplo .= $inversion;
+                        goto TRA_SKIP;
+                    }
+                    $variation_haplo .= $inversion;
+                    $variation_haplo .= $line_tmp;      
+                }
+                else
+                {
+                   $inverting += length($seq_ref_line);
+                   $inversion_seq .= $seq_ref_line;
+                }
             }
             else
-            {
-               $inverting += length($line);
-               $inversion_seq .= $line;
+            {        
+                $haplotype1_print .= $seq_ref_line;
+                $haplotype2_print .= $seq_ref_line;
+                $haplo_merged_print .= $seq_ref_line;
             }
         }
         else
-        {        
-            $haplotype1_print .= $line;
-            $haplotype2_print .= $line;
-            $haplo_merged_print .= $line;
-        }
-    }
-    else
-    {
-        $haplotype1_print .= $line;
-        $haplotype2_print .= $line;
-        $haplo_merged_print .= $line;
-    }
-    if ($next_pos < $size_current_contig+length($line) && $next_pos ne "")
-    {
-        if ($next_length_minus_save > 0)
         {
-            substr $line, 0, $next_length_minus_save, "";
+            $haplotype1_print .= $seq_ref_line;
+            $haplotype2_print .= $seq_ref_line;
+            $haplo_merged_print .= $seq_ref_line;
         }
-        $reference_size2 += $next_length_minus_save;
-        $size_current_contig += $next_length_minus_save;
-        goto SELECT_SV;
-    }
-TRA_SKIP:
-    if ($SVs_whitin_1_line eq "yes")
-    {
-        $reference_size2 += $SVs_whitin_1_line_length-length($line);
-        $size_current_contig += $SVs_whitin_1_line_length-length($line);
-    }
-    else
-    {
-        $SVs_whitin_1_line = "";
-        $reference_size2 += length($line);
-        $size_current_contig += length($line);
-    }
-#Select haplotype----------------------------------------------------------------------------------------------------------------        
-    if ($finish_var eq "yes")
-    {       
-        $haplo_merged_print .= $variation_haplo;
-        if ($heterozygosity eq "no" && $hap eq "")
+        if ($next_pos < $size_current_contig+length($seq_ref_line) && $next_pos ne "")
         {
-            $hap = "1/1";
-        }
-        if ($hap eq "1/1")
-        {
-            $haplotype1_print .= $variation_haplo;
-            $haplotype2_print .= $variation_haplo;
-        }
-        elsif ($hap eq "1/0")
-        {
-            $haplotype1_print .= $variation_haplo;
-            $haplotype2_print .= $ref_haplo;
-        }
-        elsif ($hap eq "0/1")
-        {
-            $haplotype2_print .= $variation_haplo;
-            $haplotype1_print .= $ref_haplo;
-        }
-        else
-        {
-            print $hap." HAP\n";
-            print  $size_current_contig." CURRENT_CONTIG\n";
-            print  $next_pos." NEXT_POS\n";
-            print  length($line)." LL\n";
-            die "\nHeterozygosity parameter is not filled in correctly: give a percentage (for example: 60%). If no heterozygosity is desired, give 0%\n";
-        }
-
-        $hap = "";
-        $variation_haplo = "";
-        $ref_haplo = "";
-        $finish_var = "";
-        $finish_var_np = "yes";
-        
-        if ($SVs_whitin_1_line eq "yes")
-        {
-            $SVs_whitin_1_line = "yes2";
-            #print  $size_current_contig." CURRENT_CONTIG\n";
-           # print  $next_pos." NEXT_POS\n";
-            #print  length($line)." LL\n";
+            if ($next_length_minus_save > 0)
+            {
+                substr $seq_ref_line, 0, $next_length_minus_save, "";
+            }
+            $reference_size2 += $next_length_minus_save;
+            $size_current_contig += $next_length_minus_save;
             goto SELECT_SV;
         }
+TRA_SKIP:
+        if ($SVs_whitin_1_line eq "yes")
+        {
+            $reference_size2 += $SVs_whitin_1_line_length-length($seq_ref_line);
+            $size_current_contig += $SVs_whitin_1_line_length-length($seq_ref_line);
+        }
+        else
+        {
+            $SVs_whitin_1_line = "";
+            $reference_size2 += length($seq_ref_line);
+            $size_current_contig += length($seq_ref_line);
+        }
+#Select haplotype----------------------------------------------------------------------------------------------------------------        
+        if ($finish_var eq "yes")
+        {       
+            $haplo_merged_print .= $variation_haplo;
+            if ($heterozygosity eq "no" && $hap eq "")
+            {
+                $hap = "1/1";
+            }
+            if ($hap eq "1/1")
+            {
+                $haplotype1_print .= $variation_haplo;
+                $haplotype2_print .= $variation_haplo;
+            }
+            elsif ($hap eq "1/0")
+            {
+                $haplotype1_print .= $variation_haplo;
+                $haplotype2_print .= $ref_haplo;
+            }
+            elsif ($hap eq "0/1")
+            {
+                $haplotype2_print .= $variation_haplo;
+                $haplotype1_print .= $ref_haplo;
+            }
+            else
+            {
+                print $hap." HAP\n";
+                print  $size_current_contig." CURRENT_CONTIG\n";
+                print  $next_pos." NEXT_POS\n";
+                print  length($seq_ref_line)." LL\n";
+                die "\nHeterozygosity parameter is not filled in correctly: give a percentage (for example: 60%). If no heterozygosity is desired, give 0%\n";
+            }
+    
+            $hap = "";
+            $variation_haplo = "";
+            $ref_haplo = "";
+            $finish_var = "";
+            $finish_var_np = "yes";
+            
+            if ($SVs_whitin_1_line eq "yes")
+            {
+                $SVs_whitin_1_line = "yes2";
+                #print  $size_current_contig." CURRENT_CONTIG\n";
+               # print  $next_pos." NEXT_POS\n";
+                #print  length($seq_ref_line)." LL\n";
+                goto SELECT_SV;
+            }
+        }
     }
+    
 NEW_CONTIG:
-
 #print chromosome to haplo files2------------------------------------------------------------------------------------------------- 
     if (eof || $reference_size2 eq $reference_size)
     {    
         my $tmp_hap1 = "";
         my $tmp_hap2 = "";
         my %haps;
-               
         while ($pos_hap1 < length($haplotype1_print))
         {
             my $print_line = substr $haplotype1_print, $pos_hap1, $length_fasta_line;
@@ -3801,7 +3824,7 @@ NEW_CONTIG:
 #Simulate Nanopore reads START PARALLEL LOOP--------------------------------------------------------------------------------------------------------
         
         if ($NP_coverage > 0)
-        {
+        { 
             foreach my $haps_tmp (sort keys %haps)
             {
                 my @haplo_tmp = split /_split_/, $haps_tmp;
@@ -3871,17 +3894,18 @@ NEW_CONTIG:
                 }
                 my %NP_seq_length;
                 undef %NP_seq_length;
-                
+        $time_check1 = time;
+#print length($tmp_hap)." COV_TMP\n";     
                 while (length($tmp_hap) > $NP_range_low)
                 {                
                     my $o = '0';
                     my $d = '0';    
                     my $count_seqs = keys %NP_seq_length;
-    
+   
                     while ($o < $NP_coverage_tmp-$count_seqs)
                     {
                         $NP_read_count++;
-    NP_LENGTH:      
+     
                         my $random_NP_length = '0';
                         if (exists($NP_extra_long_reads{$NP_read_count}))
                         {
@@ -3905,10 +3929,6 @@ NEW_CONTIG:
                         }
                         $NP_total_length_tmp += $random_NP_length;
             
-                        if (exists($NP_seq_length{$random_NP_length+$shortest_seq1}))
-                        {
-                            goto NP_LENGTH;
-                        }
                         my $chance_sense = int(rand(2));
                         my $seq_tmp = "";
                         if ($chance_sense eq '0')
@@ -3923,8 +3943,7 @@ NEW_CONTIG:
                         my $seq_tmp2 = $seq_tmp;
                         my $length_read = length($seq_tmp2);
         
-    #input sequencing errors---------------------------------------------------------------------------------------------------------------------              
-        
+#input sequencing errors---------------------------------------------------------------------------------------------------------------------                     
                         my $length_tmp = length($seq_tmp);                      
                         my $j = 1.2;
                         my $t= rand(1.5);
@@ -3943,12 +3962,12 @@ NEW_CONTIG:
                             $NP_mismatch_rate = '0';
                         }
                                               
-    #mismatch-----------------------------------------------------------------------------------------------          
+#mismatch-----------------------------------------------------------------------------------------------          
                         my $mismatch_nuc_count = int($length_tmp*$NP_mismatch_rate);
                         my $f = '0';
                         my %mismatches;
                         undef %mismatches;
-        
+          
                         while ($f < $mismatch_nuc_count)
                         {                           
                             my $pos = int(rand($length_read-3));
@@ -4084,7 +4103,8 @@ NEW_CONTIG:
                                 substr $seq_tmp, $pos, length($mismatch_nuc), $mismatch_nuc;
                             }                         
                         }
-    #indel------------------------------------------------------------------------------------------------------           
+                                          
+#indel------------------------------------------------------------------------------------------------------           
                         my %indels;
                         undef %indels;
                         my $delete_nuc_count = int($length_tmp*$NP_deletion_rate);
@@ -4223,8 +4243,8 @@ NEW_CONTIG:
                             $indels{$pos} = $insert_seq;
                             $r++;    
                         }
-    #-----------------------------------------------------------------------------------------------------------                                   
-                        
+#-----------------------------------------------------------------------------------------------------------                                   
+                      
                         foreach my $indel_tmp (sort {$b <=> $a} keys %indels)
                         {                        
                             if ($indels{$indel_tmp} > 0)
@@ -4242,10 +4262,16 @@ NEW_CONTIG:
                         print $OUTPUT_NP ">".$project."_".$NP_read_count."_length=".length($seq_tmp)."_HAP".$haps_tmp."\n";
                         print $OUTPUT_NP $seq_tmp."\n";
         
-                        $NP_seq_length{$shortest_seq1+$random_NP_length} = undef;
-                        $o++;
+                        my $read_length_tmp = $random_NP_length+$shortest_seq1;
+                        while (exists($NP_seq_length{$read_length_tmp}))
+                        {
+                            $read_length_tmp += 0.1;
+                        }
+                        $NP_seq_length{$read_length_tmp} = undef;
+                        $count_seqs = keys %NP_seq_length;
+                        $o++;                  
                     }
-                    
+                 
                     if ($d eq '0')
                     {
                         foreach my $seq_length (sort {$a <=> $b} keys %NP_seq_length)
@@ -4261,10 +4287,11 @@ NEW_CONTIG:
         
                     $shortest_seq_tmp = $shortest_seq1-$seq_done1;
                     $seq_done1 += $shortest_seq_tmp;
-                    
+             #print $shortest_seq_tmp." SHORTEST_SEQ\n";       
                     substr $tmp_hap, 0, $shortest_seq_tmp, "";
                 }
-                close $OUTPUT_NP;
+   my $time_check2 = time-$time_check1;
+#print $time_check2." TIME\n";
                 my %hash_tmp;
                 $hash_tmp{'1'} = $NP_read_count;
                 $hash_tmp{'2'} = $NP_total_length_tmp;
@@ -4295,6 +4322,7 @@ NEW_CONTIG:
     #}
     #$time_np += time-$time_np_start;
 }
+END0:
 
 $pm->wait_all_children;
 
