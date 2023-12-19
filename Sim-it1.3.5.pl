@@ -14,7 +14,7 @@ use Parallel::ForkManager;
 
 print "\n\n-----------------------------------------------";
 print "\nSim-it\n";
-print "Version 1.3.5\n";
+print "Version 1.3.6\n";
 print "Author: Nicolas Dierckxsens, (c) 2020-2023\n";
 print "-----------------------------------------------\n\n";
 
@@ -2137,6 +2137,10 @@ REF:while (my $line = <$FILE_REF>)
         {
             $chromosome = $1;
         }
+        elsif ($line =~ m/>(NW_\d+(.\d*)*)_.*/)
+        {
+            $chromosome = $1;
+        }  
         else
         {
             $chromosome = substr $line, 1;
@@ -2227,7 +2231,7 @@ NEW_CONTIG0:
         }
         if ($chromosome ne "")
         {
-            $chr_prev = $chromosome;
+            $chr_prev = $chromosome;    
         }
         
         if ($line =~ m/>(\d+|X|Y|MT)\s+dna:chromosome.*/)
