@@ -14,7 +14,7 @@ use Parallel::ForkManager;
 
 print "\n\n-----------------------------------------------";
 print "\nSim-it\n";
-print "Version 1.3.6\n";
+print "Version 1.3.7\n";
 print "Author: Nicolas Dierckxsens, (c) 2020-2023\n";
 print "-----------------------------------------------\n\n";
 
@@ -660,7 +660,8 @@ my $output_LOG  = $output."log_".$project.".txt";
 open(OUTPUT_LOG, ">" .$output_LOG) or die "\nCan't open file $output_LOG, $!\n";
 
 
-my $output_vcf = $output.$project.".vcf";
+my $output_vcf = $output.$project."_simplified.vcf";
+my $output_vcf_official = $output.$project.".vcf";
 my $output_ref = $output.$project.".fasta";
 my $output_hap1 = $output.$project."_haplotype1.fasta";
 my $output_hap2 = $output.$project."_haplotype2.fasta";
@@ -1053,6 +1054,7 @@ print OUTPUT_LOG "--------------------------------------------------------------
 if ($SV_input eq "yes")
 {
     open(OUTPUT_VCF, ">" .$output_vcf) or die "Can't open variance file $output_vcf, $!\n";
+    open(OUTPUT_VCF_FULL, ">" .$output_vcf_official) or die "Can't open variance file $output_vcf_official, $!\n";
     
     my ($wday, $mon, $mday, $hour, $min, $sec, $year) = localtime;
     my @localtime = split / /, localtime;
@@ -1070,6 +1072,22 @@ if ($SV_input eq "yes")
     print OUTPUT_VCF "##reference=".$reference."\n";
     #print OUTPUT_VCF "##INFO=<ID=tPOS,Number=1,Type=Float,Description=\"Allele Frequency\">\n";
     print OUTPUT_VCF "#CHR\tPOS\tSVLENGTH\tTYPE\tVARHAP\tVARSEQ\n";
+    
+    print OUTPUT_VCF_FULL "##fileformat=VCFv4.0\n";
+    print OUTPUT_VCF_FULL "##fileDate=".$localtime[4].$month.$localtime[2]."\n";
+    print OUTPUT_VCF_FULL "##reference=".$reference."\n";
+    print OUTPUT_VCF_FULL "##ALT=<ID=DEL,Description=\"Deletion\">\n";
+    print OUTPUT_VCF_FULL "##ALT=<ID=INV,Description=\"Inversion\">\n";
+    print OUTPUT_VCF_FULL "##ALT=<ID=DUP,Description=\"Duplication\">\n";
+    print OUTPUT_VCF_FULL "##ALT=<ID=INS,Description=\"Insertion\">\n";
+    print OUTPUT_VCF_FULL "##INFO=<ID=SVTYPE,Number=1,Type=String,Description=\"Type of structural variant\">\n";
+    print OUTPUT_VCF_FULL "##INFO=<ID=SVLEN,Number=1,Type=Integer,Description=\"Difference in length between REF and ALT alleles\">\n";
+    print OUTPUT_VCF_FULL "##INFO=<ID=END,Number=1,Type=Integer,Description=\"End position of the variant described in this record\">\n";
+    print OUTPUT_VCF_FULL "##INFO=<ID=SVCALLERS,Number=.,Type=String,Description=\"SV callers that support this SV\">\n";
+    print OUTPUT_VCF_FULL "##FORMAT=<ID=GT,Number=1,Type=String,Description=\"Genotype\">\n";
+    print OUTPUT_VCF_FULL "##FORMAT=<ID=DR,Number=1,Type=Integer,Description=\"# High-quality reference reads\">\n";
+    print OUTPUT_VCF_FULL "##FORMAT=<ID=DV,Number=1,Type=Integer,Description=\"# High-quality variant reads\">\n";
+    print OUTPUT_VCF_FULL "#CHROM\tPOS\tID\tREF\tALT\tTYPE\tQUAL\tFILTER\tINFO\tFORMAT\n";
 
 #--------------------------------------------------------------------------------------------------------------------------------------------------------
     open(OUTPUT_REF, ">" .$output_ref) or die "Can't open fasta output file $output_ref, $!\n";
@@ -1199,6 +1217,10 @@ while (my $line = <$FILE_REF>)
         elsif ($line =~ m/>.*chromosome\s(\d+|X|Y|MT).*/)
         {
             $chromosome_tmp = $1;
+        }
+        elsif (length($line) > 100)
+        {
+            $chromosome_tmp = substr $line, 1, 80;
         }
         else
         {
@@ -2091,7 +2113,7 @@ $pm->run_on_finish(
 #----------------------------------------------------------------------------------------------------------------------------------------------------------------
 #-----------------------------------------------------------------START SIMULATION-------------------------------------------------------------------------------
 #----------------------------------------------------------------------------------------------------------------------------------------------------------------
-
+my $id_SV_count = "1";
 
 REF:while (my $line = <$FILE_REF>)
 {
@@ -2989,6 +3011,8 @@ NEW_CONTIG0:
             else
             {
                 print OUTPUT_VCF $chromosome.":".$chromosome2."\t".$size_current_contig."\t".$random_length_TRA."\tTRA\t".$hap_tmp."\n";
+                print OUTPUT_VCF_FULL $chromosome.":".$chromosome2."\t.\t".$id_SV_count."\t.\t.\t.\tPASS\tSVTYPE=TRA;SVLEN=".$random_length_TRA."\tGT\t".$hap_tmp."\n";
+                $id_SV_count++;
             }
             next REF;
         }
@@ -3091,6 +3115,7 @@ SELECT_SV:
             if ((($NEXT_SV eq "DEL" && (($reference_size2 > $random_length_interval && $DEL_input_tmp > 0 && $deleting eq "") || $VCF_input_now eq "yes")) ||
                 ($NEXT_SV eq "CSUB" && (($reference_size2 > $random_length_interval && $CSUB_input_tmp > 0 && $deleting eq "") || $VCF_input_now eq "yes"))) && $SVs_whitin_1_line ne "yes")
             {
+                my $REF = $ref_haplo;
                 if ($VCF_input_now eq "yes")
                 {
                     goto VCF_INPUT_DEL;
@@ -3164,7 +3189,8 @@ VCF_INPUT_DEL:
          
                 if ($random_length_DEL <= length($seq_ref_line)-$next_length_minus)
                 {
-                    substr $line_tmp, 0, $random_length_DEL, "";
+                    my $REF2 = substr $line_tmp, 0, $random_length_DEL, "";
+                    $REF .= $REF2;
     
                     if ($NEXT_SV eq "CSUB")
                     {
@@ -3201,7 +3227,9 @@ VCF_INPUT_DEL:
                     $DEL_interval_tmp = $DEL_interval+$reference_size2;
                     $random_length_interval = int(rand($TOTAL_interval-2000-$random_length_DEL)) + 2000 + $random_length_DEL + $reference_size2;
                     print OUTPUT_VCF $chromosome."\t".$pos_tmp."\t".$random_length_DEL."\tDEL\t".$hap."\t".$SEQ."\n";
+                    print OUTPUT_VCF_FULL $chromosome."\t".$pos_tmp."\t".$id_SV_count."\t".$REF."\t.\t.\tPASS\tSVTYPE=DEL;SVLEN=".$random_length_DEL."\tGT\t".$hap."\n";
                     $VCF_output{$pos_tmp} = undef;
+                    $id_SV_count++;
                     
                     my $range_graph = int(int($random_length_DEL)/15);
                     if (exists($graph_DEL{$range_graph}))
@@ -3220,7 +3248,9 @@ VCF_INPUT_DEL:
                     $CSUB_interval_tmp = $CSUB_interval+$reference_size2;
                     $random_length_interval = int(rand($TOTAL_interval-2000)) + 2000 + $reference_size2;
                     print OUTPUT_VCF $chromosome."\t".$pos_tmp."\t".$random_length_DEL."\tCSUB\t".$hap."\t".$SEQ."\n";
+                    print OUTPUT_VCF_FULL $chromosome."\t".$pos_tmp."\t".$id_SV_count."\t".$REF."\t".$SEQ."\t.\tPASS\tSVTYPE=CSUB;SVLEN=".$random_length_DEL."\tGT\t".$hap."\n";
                     $VCF_output{$pos_tmp} = undef;
+                    $id_SV_count++;
                 }
                 $TOTAL_interval_tmp = $TOTAL_interval+$reference_size2;
                 $NEXT_SV = "";
@@ -3289,7 +3319,9 @@ VCF_INPUT_DEL:
                     $variation_haplo .= $next_length_start;
     
                     print OUTPUT_VCF $chromosome."\t".$next_pos."\t".$random_length_INS."\t".$next_type."\t".$next_hap."\t".$next_seq."\n";
+                    print OUTPUT_VCF_FULL $chromosome."\t".$next_pos."\t".$id_SV_count."\t.\t".$next_seq."\t.\tPASS\tSVTYPE=".$next_type.";SVLEN=".$random_length_INS."\tGT\t".$next_hap."\n";
                     $VCF_output{$next_pos} = undef;
+                    $id_SV_count++;
     
                     if (exists($foreign_contigs{$next_seq}) && exists($sequences_foreign{$next_pos}))
                     {
@@ -3355,7 +3387,9 @@ INS_RANGE3:
                         hap
                     }
                     print OUTPUT_VCF $chromosome."\t".$size_current_contig."\t".$random_length_INS."\tINS\t".$hap."\t".$next_seq."\n";
+                    print OUTPUT_VCF_FULL $chromosome."\t".$size_current_contig."\t".$id_SV_count."\t.\t".$next_seq."\t.\tPASS\tSVTYPE=INS;SVLEN=".$random_length_INS."\tGT\t".$hap."\n";
                     $VCF_output{$size_current_contig} = undef;
+                    $id_SV_count++;
                 }
                 
                 if ($NEXT_SV eq "INS")
@@ -3450,13 +3484,17 @@ VCF_INPUT_DUP:
                 }
                 if ($NEXT_SV eq "DUP")
                 {
+                    my $lengthi_tmp = $random_length_DUP*$random_copies_DUP;
                     print OUTPUT_VCF $chromosome."\t".$pos_tmp."\t".$random_length_DUP."x".$random_copies_DUP."\t".$NEXT_SV."\t".$hap."\t".$SEQ."\n";
+                    print OUTPUT_VCF_FULL $chromosome."\t".$pos_tmp."\t".$id_SV_count."\t.\t".$SEQ."\t.\tPASS\tSVTYPE=DUP:TANDEM;SVLEN=".$lengthi_tmp."\tGT:CN\t".$hap.":".$random_copies_DUP."\n";
                 }
                 else
                 {
                     print OUTPUT_VCF $chromosome."\t".$pos_tmp."\t".$random_length_DUP."\t".$NEXT_SV."\t".$hap."\t".$SEQ."\n";
+                    print OUTPUT_VCF_FULL $chromosome."\t".$pos_tmp."\t".$id_SV_count."\t.\t.\t.\tPASS\tSVTYPE=".$NEXT_SV.";SVLEN=".$random_length_DUP."\tGT\t".$hap."\n";
                 }
                 $VCF_output{$pos_tmp} = undef;
+                $id_SV_count++;
                 
                 if (exists($sequences_final{$SEQ}) || exists($foreign_contigs{$SEQ}))
                 {
@@ -3632,9 +3670,7 @@ VCF_INPUT_INV:
                 {
                     hap
                 }
-                print OUTPUT_VCF $chromosome."\t".$pos_tmp."\t".$random_length_INV."\tINV\t".$hap."\t".$SEQ."\n";
-                $VCF_output{$pos_tmp} = undef;
-                          
+      
                 if (exists($graph_INV2{$random_length_INV}))
                 { 
                     my $f = $graph_INV2{$random_length_INV}+1;
@@ -3668,6 +3704,12 @@ VCF_INPUT_INV:
                 $random_length_interval = int(rand($TOTAL_interval-2000-$random_length_INV)) + $random_length_INV + 2000 + $reference_size2;
                 $NEXT_SV = "";
                 $ref_haplo .= $seq_ref_line;
+                
+                print OUTPUT_VCF $chromosome."\t".$pos_tmp."\t".$random_length_INV."\tINV\t".$hap."\t".$SEQ."\n";
+                my $END_POS_TMP = $pos_tmp+$random_length_INV;
+                print OUTPUT_VCF_FULL $chromosome."\t".$pos_tmp."\t".$id_SV_count."\t.\t<INV>\t.\tPASS\tSVTYPE=INV;END=".$END_POS_TMP.";SVLEN=".$random_length_INV."\tGT\t".$hap."\n";
+                $VCF_output{$pos_tmp} = undef;
+                $id_SV_count++;
             }
             elsif ($inverting < $random_length_INV && $inverting ne "")
             {             
@@ -4433,6 +4475,7 @@ if ($SV_input ne "")
 }
 
 close OUTPUT_VCF;
+close OUTPUT_VCF_FULL;
 close OUTPUT_REF;
 close OUTPUT_HAP1;
 close OUTPUT_HAP2;
