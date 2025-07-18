@@ -14,7 +14,7 @@ use Parallel::ForkManager;
 
 print "\n\n-----------------------------------------------";
 print "\nSim-it\n";
-print "Version 1.3.8\n";
+print "Version 1.3.9\n";
 print "Author: Nicolas Dierckxsens, (c) 2020-2025\n";
 print "-----------------------------------------------\n\n";
 
@@ -3227,7 +3227,7 @@ VCF_INPUT_DEL:
                     $DEL_interval_tmp = $DEL_interval+$reference_size2;
                     $random_length_interval = int(rand($TOTAL_interval-2000-$random_length_DEL)) + 2000 + $random_length_DEL + $reference_size2;
                     print OUTPUT_VCF $chromosome."\t".$pos_tmp."\t".$random_length_DEL."\tDEL\t".$hap."\t".$SEQ."\n";
-                    print OUTPUT_VCF_FULL $chromosome."\t".$pos_tmp."\t".$id_SV_count."\t".$REF."\t.\tPASS\tSVTYPE=DEL;SVLEN=".$random_length_DEL."\tGT\t".$hap."\n";
+                    print OUTPUT_VCF_FULL $chromosome."\t".$pos_tmp."\t".$id_SV_count."\t".$REF."\t.\t.\tPASS\tSVTYPE=DEL;SVLEN=".$random_length_DEL."\tGT\t".$hap."\n";
                     $VCF_output{$pos_tmp} = undef;
                     $id_SV_count++;
                     
@@ -3248,7 +3248,7 @@ VCF_INPUT_DEL:
                     $CSUB_interval_tmp = $CSUB_interval+$reference_size2;
                     $random_length_interval = int(rand($TOTAL_interval-2000)) + 2000 + $reference_size2;
                     print OUTPUT_VCF $chromosome."\t".$pos_tmp."\t".$random_length_DEL."\tCSUB\t".$hap."\t".$SEQ."\n";
-                    print OUTPUT_VCF_FULL $chromosome."\t".$pos_tmp."\t".$id_SV_count."\t".$REF."\t".$SEQ."\tPASS\tSVTYPE=CSUB;SVLEN=".$random_length_DEL."\tGT\t".$hap."\n";
+                    print OUTPUT_VCF_FULL $chromosome."\t".$pos_tmp."\t".$id_SV_count."\t".$REF."\t".$SEQ."\t.\tPASS\tSVTYPE=CSUB;SVLEN=".$random_length_DEL."\tGT\t".$hap."\n";
                     $VCF_output{$pos_tmp} = undef;
                     $id_SV_count++;
                 }
@@ -3333,7 +3333,7 @@ VCF_INPUT_DEL:
                     }
                     
                     print OUTPUT_VCF $chromosome."\t".$next_pos."\t".$random_length_INS."\t".$next_type."\t".$next_hap."\t".$insert."\n";
-                    print OUTPUT_VCF_FULL $chromosome."\t".$next_pos."\t".$id_SV_count."\t.\t".$insert."\tPASS\tSVTYPE=".$next_type.";SVLEN=".$random_length_INS."\tGT\t".$next_hap."\n";
+                    print OUTPUT_VCF_FULL $chromosome."\t".$next_pos."\t".$id_SV_count."\t.\t".$insert."\t.\tPASS\tSVTYPE=".$next_type.";SVLEN=".$random_length_INS."\tGT\t".$next_hap."\n";
                     $VCF_output{$next_pos} = undef;
                     $id_SV_count++;
                 }
@@ -3387,7 +3387,7 @@ INS_RANGE3:
                         hap
                     }
                     print OUTPUT_VCF $chromosome."\t".$size_current_contig."\t".$random_length_INS."\tINS\t".$hap."\t".$next_seq."\n";
-                    print OUTPUT_VCF_FULL $chromosome."\t".$size_current_contig."\t".$id_SV_count."\t.\t.\tPASS\tSVTYPE=INS;SVLEN=".$random_length_INS."\tGT\t".$hap."\n";
+                    print OUTPUT_VCF_FULL $chromosome."\t".$size_current_contig."\t".$id_SV_count."\t.\t.\t.\tPASS\tSVTYPE=INS;SVLEN=".$random_length_INS."\tGT\t".$hap."\n";
                     $VCF_output{$size_current_contig} = undef;
                     $id_SV_count++;
                 }
@@ -3486,12 +3486,12 @@ VCF_INPUT_DUP:
                 {
                     my $lengthi_tmp = $random_length_DUP*$random_copies_DUP;
                     print OUTPUT_VCF $chromosome."\t".$pos_tmp."\t".$random_length_DUP."x".$random_copies_DUP."\t".$NEXT_SV."\t".$hap."\t".$SEQ."\n";
-                    print OUTPUT_VCF_FULL $chromosome."\t".$pos_tmp."\t".$id_SV_count."\t.\t".$SEQ."\tPASS\tSVTYPE=DUP:TANDEM;SVLEN=".$lengthi_tmp."\tGT:CN\t".$hap.":".$random_copies_DUP."\n";
+                    print OUTPUT_VCF_FULL $chromosome."\t".$pos_tmp."\t".$id_SV_count."\t.\t".$SEQ."\t.\tPASS\tSVTYPE=DUP:TANDEM;SVLEN=".$lengthi_tmp."\tGT:CN\t".$hap.":".$random_copies_DUP."\n";
                 }
                 else
                 {
                     print OUTPUT_VCF $chromosome."\t".$pos_tmp."\t".$random_length_DUP."\t".$NEXT_SV."\t".$hap."\t".$SEQ."\n";
-                    print OUTPUT_VCF_FULL $chromosome."\t".$pos_tmp."\t".$id_SV_count."\t.\t.\tPASS\tSVTYPE=".$NEXT_SV.";SVLEN=".$random_length_DUP."\tGT\t".$hap."\n";
+                    print OUTPUT_VCF_FULL $chromosome."\t".$pos_tmp."\t".$id_SV_count."\t.\t.\t.\tPASS\tSVTYPE=".$NEXT_SV.";SVLEN=".$random_length_DUP."\tGT\t".$hap."\n";
                 }
                 $VCF_output{$pos_tmp} = undef;
                 $id_SV_count++;
@@ -3707,7 +3707,7 @@ VCF_INPUT_INV:
                 
                 print OUTPUT_VCF $chromosome."\t".$pos_tmp."\t".$random_length_INV."\tINV\t".$hap."\t".$SEQ."\n";
                 my $END_POS_TMP = $pos_tmp+$random_length_INV;
-                print OUTPUT_VCF_FULL $chromosome."\t".$pos_tmp."\t".$id_SV_count."\t.\t<INV>\tPASS\tSVTYPE=INV;END=".$END_POS_TMP.";SVLEN=".$random_length_INV."\tGT\t".$hap."\n";
+                print OUTPUT_VCF_FULL $chromosome."\t".$pos_tmp."\t".$id_SV_count."\t.\t<INV>\t.\tPASS\tSVTYPE=INV;END=".$END_POS_TMP.";SVLEN=".$random_length_INV."\tGT\t".$hap."\n";
                 $VCF_output{$pos_tmp} = undef;
                 $id_SV_count++;
             }
