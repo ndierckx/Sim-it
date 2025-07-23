@@ -24,7 +24,7 @@ https://github.com/ndierckx/Sim-it/wiki
 
 Usage:
 
-<code>perl Sim-it1.3.3.pl -c config_Sim-it.txt -o output/directory/path</code>
+<code>perl Sim-it1.3.9.pl -c config_Sim-it.txt -o output/directory/path</code>
 
 
 ----------------------------------------------------------------------------------------------------------
