@@ -1,7 +1,7 @@
 #!/usr/bin/env perl
 ######################################################
 #         SOFTWARE COPYRIGHT NOTICE AGREEMENT        #
-#  Copyright (C) {2020-2023}  {Nicolas Dierckxsens}  #
+#  Copyright (C) {2020-2025}  {Nicolas Dierckxsens}  #
 #              All Rights Reserved                   #
 #         See file LICENSE for details.              #
 ######################################################
@@ -14,7 +14,7 @@ use Parallel::ForkManager;
 
 print "\n\n-----------------------------------------------";
 print "\nSim-it\n";
-print "Version 1.3.9\n";
+print "Version 1.4.0\n";
 print "Author: Nicolas Dierckxsens, (c) 2020-2025\n";
 print "-----------------------------------------------\n\n";
 
@@ -115,6 +115,7 @@ my $shortest_seq2 = '0';
 my $seq_done = '0';
 my $seq_done1 = '0';
 my $seq_done2 = '0';
+my $DEL_seq = "";
 
 my $NP_coverage = '0';
 my $NP_coverage1 = '0';
@@ -144,7 +145,7 @@ my @nucs = ("A","C","T","G");
 GetOptions (
             "c=s" => \$config,
             "o=s" => \$output,
-            ) or die "Incorrect usage!\n\nUsage: perl NOVOLoci1.0.pl -c config.txt -o output_path\n\n";
+            ) or die "Incorrect usage!\n\nUsage: perl Sim-it1.4.0.pl -c config_Sim-it.txt -o output/directory/path\n\n";
 
 open(CONFIG, $config) or die "Error: Can't open the configuration file, please check the manual!\n\nUsage: perl Sim-it.pl -c config.txt -o output_path\n\n";
 
@@ -3115,7 +3116,6 @@ SELECT_SV:
             if ((($NEXT_SV eq "DEL" && (($reference_size2 > $random_length_interval && $DEL_input_tmp > 0 && $deleting eq "") || $VCF_input_now eq "yes")) ||
                 ($NEXT_SV eq "CSUB" && (($reference_size2 > $random_length_interval && $CSUB_input_tmp > 0 && $deleting eq "") || $VCF_input_now eq "yes"))) && $SVs_whitin_1_line ne "yes")
             {
-                my $REF = $ref_haplo;
                 if ($VCF_input_now eq "yes")
                 {
                     goto VCF_INPUT_DEL;
@@ -3169,6 +3169,8 @@ VCF_INPUT_DEL:
                 my $pos_tmp = $size_current_contig;
                 
                 my $line_tmp = $seq_ref_line;
+                my $ref_base = substr $variation_haplo, -1, 1;
+                
                 if ($VCF_input_now eq "yes")
                 {
                     $random_length_DEL = $next_length;
@@ -3190,7 +3192,7 @@ VCF_INPUT_DEL:
                 if ($random_length_DEL <= length($seq_ref_line)-$next_length_minus)
                 {
                     my $REF2 = substr $line_tmp, 0, $random_length_DEL, "";
-                    $REF .= $REF2;
+                    $DEL_seq .= $REF2;
     
                     if ($NEXT_SV eq "CSUB")
                     {
@@ -3218,6 +3220,7 @@ VCF_INPUT_DEL:
                     {
                         $csubbing = "yes";
                     }
+                    $DEL_seq = $seq_ref_line;
                 }
                 $next_length_minus = '0';
                 
@@ -3227,7 +3230,8 @@ VCF_INPUT_DEL:
                     $DEL_interval_tmp = $DEL_interval+$reference_size2;
                     $random_length_interval = int(rand($TOTAL_interval-2000-$random_length_DEL)) + 2000 + $random_length_DEL + $reference_size2;
                     print OUTPUT_VCF $chromosome."\t".$pos_tmp."\t".$random_length_DEL."\tDEL\t".$hap."\t".$SEQ."\n";
-                    print OUTPUT_VCF_FULL $chromosome."\t".$pos_tmp."\t".$id_SV_count."\t".$REF."\t.\t.\tPASS\tSVTYPE=DEL;SVLEN=".$random_length_DEL."\tGT\t".$hap."\n";
+                    print OUTPUT_VCF_FULL $chromosome."\t".$pos_tmp."\t".$id_SV_count."\t".$ref_base.$DEL_seq."\t".$ref_base."\t.\tPASS\tSVTYPE=DEL;SVLEN=".$random_length_DEL."\tGT\t".$hap."\n";
+                    $DEL_seq = "";
                     $VCF_output{$pos_tmp} = undef;
                     $id_SV_count++;
                     
@@ -3248,7 +3252,8 @@ VCF_INPUT_DEL:
                     $CSUB_interval_tmp = $CSUB_interval+$reference_size2;
                     $random_length_interval = int(rand($TOTAL_interval-2000)) + 2000 + $reference_size2;
                     print OUTPUT_VCF $chromosome."\t".$pos_tmp."\t".$random_length_DEL."\tCSUB\t".$hap."\t".$SEQ."\n";
-                    print OUTPUT_VCF_FULL $chromosome."\t".$pos_tmp."\t".$id_SV_count."\t".$REF."\t".$SEQ."\t.\tPASS\tSVTYPE=CSUB;SVLEN=".$random_length_DEL."\tGT\t".$hap."\n";
+                    print OUTPUT_VCF_FULL $chromosome."\t".$pos_tmp."\t".$id_SV_count."\t".$ref_base.$DEL_seq."\t".$ref_base.$SEQ."\t.\tPASS\tSVTYPE=CSUB;SVLEN=".$random_length_DEL."\tGT\t".$hap."\n";
+                    $DEL_seq = "";
                     $VCF_output{$pos_tmp} = undef;
                     $id_SV_count++;
                 }
@@ -3262,8 +3267,8 @@ VCF_INPUT_DEL:
                 if ($random_length_DEL-$deleting <= length($seq_ref_line))
                 {
                     my $line_tmp = $seq_ref_line;
-                    substr $line_tmp, 0, $random_length_DEL-$deleting, "";
-                    
+                    my $del_seq_tmp = substr $line_tmp, 0, $random_length_DEL-$deleting, "";
+                    $DEL_seq .= $del_seq_tmp;
                     if ($csubbing eq "yes")
                     {
                         $csubbing = "";
@@ -3294,6 +3299,7 @@ VCF_INPUT_DEL:
                 else
                 {
                     $deleting += length($seq_ref_line);
+                    $DEL_seq .= $seq_ref_line;
                 } 
             }
 #Insertions and inverted duplications----------------------------------------------------------------------------------------------
@@ -3304,6 +3310,8 @@ VCF_INPUT_DEL:
                 $random_length_INS = "50";
     
                 my $next_length_end = "";
+                my $ref_base = "";
+
                 if ($VCF_input_now eq "yes")
                 {
                     $random_length_INS = $next_length;
@@ -3331,9 +3339,10 @@ VCF_INPUT_DEL:
                     {
                         $insert = reverse($insert_tmp);
                     }
+                    $ref_base = substr $variation_haplo, -1, 1;
                     
                     print OUTPUT_VCF $chromosome."\t".$next_pos."\t".$random_length_INS."\t".$next_type."\t".$next_hap."\t".$insert."\n";
-                    print OUTPUT_VCF_FULL $chromosome."\t".$next_pos."\t".$id_SV_count."\t.\t".$insert."\t.\tPASS\tSVTYPE=".$next_type.";SVLEN=".$random_length_INS."\tGT\t".$next_hap."\n";
+                    print OUTPUT_VCF_FULL $chromosome."\t".$next_pos."\t".$id_SV_count."\t".$ref_base."\t".$ref_base.$insert."\t.\tPASS\tSVTYPE=".$next_type.";SVLEN=".$random_length_INS."\tGT\t".$next_hap."\n";
                     $VCF_output{$next_pos} = undef;
                     $id_SV_count++;
                 }
@@ -3382,14 +3391,11 @@ INS_RANGE3:
                             goto INS_RANGE3;
                         }           
                     }
+                    $ref_base = substr $haplo_merged_print, -1, 1;
                     if ($hap eq "" && $heterozygosity ne "no")
                     {
                         hap
-                    }
-                    print OUTPUT_VCF $chromosome."\t".$size_current_contig."\t".$random_length_INS."\tINS\t".$hap."\t".$next_seq."\n";
-                    print OUTPUT_VCF_FULL $chromosome."\t".$size_current_contig."\t".$id_SV_count."\t.\t.\t.\tPASS\tSVTYPE=INS;SVLEN=".$random_length_INS."\tGT\t".$hap."\n";
-                    $VCF_output{$size_current_contig} = undef;
-                    $id_SV_count++;
+                    }  
                 }
                 
                 if ($NEXT_SV eq "INS")
@@ -3405,7 +3411,13 @@ INS_RANGE3:
                         $graph_INS{$range_graph} = 1;
                     }
                 }            
-    
+                if ($VCF_input_now eq "")
+                {
+                    print OUTPUT_VCF $chromosome."\t".$size_current_contig."\t".$random_length_INS."\tINS\t".$hap."\t".$next_seq."\n";
+                    print OUTPUT_VCF_FULL $chromosome."\t".$size_current_contig."\t".$id_SV_count."\t".$ref_base."\t".$ref_base.$insert."\t.\tPASS\tSVTYPE=INS;SVLEN=".$random_length_INS."\tGT\t".$hap."\n";
+                    $VCF_output{$size_current_contig} = undef;
+                    $id_SV_count++;
+                }
                 insert_seq ($random_length_INS, $insert);
         
                 my $line_tmp = $seq_ref_line;
@@ -3463,7 +3475,8 @@ VCF_INPUT_DUP:
     
                 my $pos_tmp = $size_current_contig;
                 my $line_tmp = $seq_ref_line;
-    
+                my $ref_base = substr $variation_haplo, -1, 1;
+
                 if ($VCF_input_now eq "yes")
                 {
                     my @next_length = split /x/, $next_length;
@@ -3486,7 +3499,7 @@ VCF_INPUT_DUP:
                 {
                     my $lengthi_tmp = $random_length_DUP*$random_copies_DUP;
                     print OUTPUT_VCF $chromosome."\t".$pos_tmp."\t".$random_length_DUP."x".$random_copies_DUP."\t".$NEXT_SV."\t".$hap."\t".$SEQ."\n";
-                    print OUTPUT_VCF_FULL $chromosome."\t".$pos_tmp."\t".$id_SV_count."\t.\t".$SEQ."\t.\tPASS\tSVTYPE=DUP:TANDEM;SVLEN=".$lengthi_tmp."\tGT:CN\t".$hap.":".$random_copies_DUP."\n";
+                    print OUTPUT_VCF_FULL $chromosome."\t".$pos_tmp."\t".$id_SV_count."\t".$ref_base."\t<DUP:TANDEM>\t.\tPASS\tSVTYPE=DUP:TANDEM;SVLEN=".$lengthi_tmp."\tGT:CN\t".$hap.":".$random_copies_DUP."\n";
                 }
                 else
                 {
@@ -3654,6 +3667,7 @@ INV_RANGE:
 VCF_INPUT_INV:
                 my $pos_tmp = $size_current_contig;
                 my $line_tmp = $seq_ref_line;
+                my $INV_seq = "";
                 if ($VCF_input_now eq "yes")
                 {
                     $random_length_INV = $next_length;
@@ -3684,6 +3698,7 @@ VCF_INPUT_INV:
                 if ($random_length_INV <= length($seq_ref_line))
                 {
                     my $inversion_tmp = substr $line_tmp, 0, $random_length_INV, "";
+                    $INV_seq = $inversion_tmp;
                     my $inversion = reverse($inversion_tmp);
                     $inversion =~ tr/ACTG/TGAC/;
     
@@ -3695,6 +3710,7 @@ VCF_INPUT_INV:
                 {
                     $inverting = length($line_tmp);
                     $inversion_seq .= $line_tmp;
+                    $INV_seq = $inversion_seq;
                 }
     
                 $next_length_minus = '0';
@@ -3707,7 +3723,7 @@ VCF_INPUT_INV:
                 
                 print OUTPUT_VCF $chromosome."\t".$pos_tmp."\t".$random_length_INV."\tINV\t".$hap."\t".$SEQ."\n";
                 my $END_POS_TMP = $pos_tmp+$random_length_INV;
-                print OUTPUT_VCF_FULL $chromosome."\t".$pos_tmp."\t".$id_SV_count."\t.\t<INV>\t.\tPASS\tSVTYPE=INV;END=".$END_POS_TMP.";SVLEN=".$random_length_INV."\tGT\t".$hap."\n";
+                print OUTPUT_VCF_FULL $chromosome."\t".$pos_tmp."\t".$id_SV_count."\t".$INV_seq."\t<INV>\t.\tPASS\tSVTYPE=INV;END=".$END_POS_TMP.";SVLEN=".$random_length_INV."\tGT\t".$hap."\n";
                 $VCF_output{$pos_tmp} = undef;
                 $id_SV_count++;
             }
