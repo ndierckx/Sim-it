@@ -14,7 +14,7 @@ use Parallel::ForkManager;
 
 print "\n\n-----------------------------------------------";
 print "\nSim-it\n";
-print "Version 1.4.0\n";
+print "Version 1.4.1\n";
 print "Author: Nicolas Dierckxsens, (c) 2020-2025\n";
 print "-----------------------------------------------\n\n";
 
@@ -116,6 +116,7 @@ my $seq_done = '0';
 my $seq_done1 = '0';
 my $seq_done2 = '0';
 my $DEL_seq = "";
+my $INV_seq = "";
 
 my $NP_coverage = '0';
 my $NP_coverage1 = '0';
@@ -1956,13 +1957,13 @@ sub insert_seq
             $insert_tmp .= $nucs[$random_nuc-1];
         }
     }
-
+    my $insert_tmp2 = $insert_tmp;
     while (length($insert_tmp) > 0)
     {
         my $insert_part = substr $insert_tmp, 0, $length_fasta_line, "";
         $variation_haplo .= $insert_part;
     }
-    return $insert_tmp;
+    return $insert_tmp2;
 }
 #------------------------------------------------------------------------------------------------------------------------------------
 #Read simulation parameters---------------------------------------------------------------------------------------------
@@ -3169,7 +3170,7 @@ VCF_INPUT_DEL:
                 my $pos_tmp = $size_current_contig;
                 
                 my $line_tmp = $seq_ref_line;
-                my $ref_base = substr $variation_haplo, -1, 1;
+                my $ref_base = "";
                 
                 if ($VCF_input_now eq "yes")
                 {
@@ -3182,7 +3183,12 @@ VCF_INPUT_DEL:
                     {
                         $next_length_start = substr $line_tmp, 0, $next_length_minus, "";
                     }
-                    VCF_input_sub $next_length_start; 
+                    VCF_input_sub $next_length_start;
+                    $ref_base = substr($next_length_start, -1, 1);
+                }
+                else
+                {
+                    $ref_base = substr($haplo_merged_print, -1, 1);
                 }
                 if ($hap eq "" && $heterozygosity ne "no")
                 {
@@ -3193,7 +3199,7 @@ VCF_INPUT_DEL:
                 {
                     my $REF2 = substr $line_tmp, 0, $random_length_DEL, "";
                     $DEL_seq .= $REF2;
-    
+
                     if ($NEXT_SV eq "CSUB")
                     {
                         if (exists($foreign_contigs{$SEQ}) && exists($sequences_foreign{$pos_tmp}))
@@ -3230,10 +3236,14 @@ VCF_INPUT_DEL:
                     $DEL_interval_tmp = $DEL_interval+$reference_size2;
                     $random_length_interval = int(rand($TOTAL_interval-2000-$random_length_DEL)) + 2000 + $random_length_DEL + $reference_size2;
                     print OUTPUT_VCF $chromosome."\t".$pos_tmp."\t".$random_length_DEL."\tDEL\t".$hap."\t".$SEQ."\n";
-                    print OUTPUT_VCF_FULL $chromosome."\t".$pos_tmp."\t".$id_SV_count."\t".$ref_base.$DEL_seq."\t".$ref_base."\t.\tPASS\tSVTYPE=DEL;SVLEN=".$random_length_DEL."\tGT\t".$hap."\n";
-                    $DEL_seq = "";
+                    if ($deleting eq "")
+                    {
+                        print OUTPUT_VCF_FULL $chromosome."\t".$pos_tmp."\t".$id_SV_count."\t".$ref_base.$DEL_seq."\t".$ref_base."\t.\tPASS\tSVTYPE=DEL;SVLEN=".$random_length_DEL."\tGT\t".$hap."\n";
+                        $DEL_seq = "";
+                        $NEXT_SV = "";
+                        $id_SV_count++;
+                    }
                     $VCF_output{$pos_tmp} = undef;
-                    $id_SV_count++;
                     
                     my $range_graph = int(int($random_length_DEL)/15);
                     if (exists($graph_DEL{$range_graph}))
@@ -3252,13 +3262,17 @@ VCF_INPUT_DEL:
                     $CSUB_interval_tmp = $CSUB_interval+$reference_size2;
                     $random_length_interval = int(rand($TOTAL_interval-2000)) + 2000 + $reference_size2;
                     print OUTPUT_VCF $chromosome."\t".$pos_tmp."\t".$random_length_DEL."\tCSUB\t".$hap."\t".$SEQ."\n";
-                    print OUTPUT_VCF_FULL $chromosome."\t".$pos_tmp."\t".$id_SV_count."\t".$ref_base.$DEL_seq."\t".$ref_base.$SEQ."\t.\tPASS\tSVTYPE=CSUB;SVLEN=".$random_length_DEL."\tGT\t".$hap."\n";
-                    $DEL_seq = "";
-                    $VCF_output{$pos_tmp} = undef;
-                    $id_SV_count++;
+                    
+                    if ($deleting eq "")
+                    {
+                        print OUTPUT_VCF_FULL $chromosome."\t".$pos_tmp."\t".$id_SV_count."\t".$ref_base.$DEL_seq."\t".$ref_base.$SEQ."\t.\tPASS\tSVTYPE=CSUB;SVLEN=".$random_length_DEL."\tGT\t".$hap."\n";
+                        $DEL_seq = "";
+                        $NEXT_SV = "";
+                        $id_SV_count++;
+                    }
+                    $VCF_output{$pos_tmp} = undef;   
                 }
-                $TOTAL_interval_tmp = $TOTAL_interval+$reference_size2;
-                $NEXT_SV = "";
+                $TOTAL_interval_tmp = $TOTAL_interval+$reference_size2;     
                 $ref_haplo .= $seq_ref_line;
             }
             elsif ($deleting < $random_length_DEL && $deleting ne "")
@@ -3287,6 +3301,29 @@ VCF_INPUT_DEL:
                     }
                     $deleting = "";
                     $finish_var = "yes";
+                    
+                    my $ref_base = "";
+                    my $pos_tmp = $size_current_contig-$random_length_DEL+length($del_seq_tmp);
+                    if ($VCF_input_now eq "yes")
+                    {
+                        $ref_base = substr $variation_haplo, -1, 1;
+                        $pos_tmp = $next_pos;
+                    }
+                    else
+                    {
+                        $ref_base = substr($haplo_merged_print, -1, 1);
+                    }
+                    if ($NEXT_SV eq "DEL")
+                    {
+                        print OUTPUT_VCF_FULL $chromosome."\t".$pos_tmp."\t".$id_SV_count."\t".$ref_base.$DEL_seq."\t".$ref_base."\t.\tPASS\tSVTYPE=DEL;SVLEN=".$random_length_DEL."\tGT\t".$hap."\n";
+                    }
+                    else
+                    {
+                        print OUTPUT_VCF_FULL $chromosome."\t".$pos_tmp."\t".$id_SV_count."\t".$ref_base.$DEL_seq."\t".$ref_base.$SEQ."\t.\tPASS\tSVTYPE=CSUB;SVLEN=".$random_length_DEL."\tGT\t".$hap."\n";
+                    }
+                    $id_SV_count++;
+                    $DEL_seq = "";
+                    $NEXT_SV = "";
                     if ($SVs_whitin_1_line eq "yes")
                     {
                         $SVs_whitin_1_line_length = length($seq_ref_line);
@@ -3294,7 +3331,7 @@ VCF_INPUT_DEL:
                         goto TRA_SKIP;
                     }
     
-                    $variation_haplo .= $line_tmp;  
+                    $variation_haplo .= $line_tmp;          
                 }
                 else
                 {
@@ -3410,15 +3447,21 @@ INS_RANGE3:
                     {
                         $graph_INS{$range_graph} = 1;
                     }
-                }            
+                }              
+                
+                my $insert_tmp = insert_seq ($random_length_INS, $insert);
+                if ($insert_tmp eq "")
+                {
+                    $insert_tmp = $insert;
+                }
+
                 if ($VCF_input_now eq "")
                 {
                     print OUTPUT_VCF $chromosome."\t".$size_current_contig."\t".$random_length_INS."\tINS\t".$hap."\t".$next_seq."\n";
-                    print OUTPUT_VCF_FULL $chromosome."\t".$size_current_contig."\t".$id_SV_count."\t".$ref_base."\t".$ref_base.$insert."\t.\tPASS\tSVTYPE=INS;SVLEN=".$random_length_INS."\tGT\t".$hap."\n";
+                    print OUTPUT_VCF_FULL $chromosome."\t".$size_current_contig."\t".$id_SV_count."\t".$ref_base."\t".$ref_base.$insert_tmp."\t.\tPASS\tSVTYPE=INS;SVLEN=".$random_length_INS."\tGT\t".$hap."\n";
                     $VCF_output{$size_current_contig} = undef;
                     $id_SV_count++;
                 }
-                insert_seq ($random_length_INS, $insert);
         
                 my $line_tmp = $seq_ref_line;
                 if ($VCF_input_now eq "yes")
@@ -3493,6 +3536,7 @@ VCF_INPUT_DUP:
                 }
                 if ($hap eq "" && $heterozygosity ne "no")
                 {
+                    $ref_base = substr $haplo_merged_print, -1, 1;
                     hap
                 }
                 if ($NEXT_SV eq "DUP")
@@ -3667,7 +3711,7 @@ INV_RANGE:
 VCF_INPUT_INV:
                 my $pos_tmp = $size_current_contig;
                 my $line_tmp = $seq_ref_line;
-                my $INV_seq = "";
+
                 if ($VCF_input_now eq "yes")
                 {
                     $random_length_INV = $next_length;
@@ -3718,14 +3762,20 @@ VCF_INPUT_INV:
                 $TOTAL_interval_tmp = $TOTAL_interval+$reference_size2;
                 $INV_interval_tmp = $INV_interval+$reference_size2;
                 $random_length_interval = int(rand($TOTAL_interval-2000-$random_length_INV)) + $random_length_INV + 2000 + $reference_size2;
-                $NEXT_SV = "";
                 $ref_haplo .= $seq_ref_line;
                 
                 print OUTPUT_VCF $chromosome."\t".$pos_tmp."\t".$random_length_INV."\tINV\t".$hap."\t".$SEQ."\n";
                 my $END_POS_TMP = $pos_tmp+$random_length_INV;
-                print OUTPUT_VCF_FULL $chromosome."\t".$pos_tmp."\t".$id_SV_count."\t".$INV_seq."\t<INV>\t.\tPASS\tSVTYPE=INV;END=".$END_POS_TMP.";SVLEN=".$random_length_INV."\tGT\t".$hap."\n";
+                
+                if ($inverting eq "")
+                {
+                    print OUTPUT_VCF_FULL $chromosome."\t".$pos_tmp."\t".$id_SV_count."\t".$INV_seq."\t<INV>\t.\tPASS\tSVTYPE=INV;END=".$END_POS_TMP.";SVLEN=".$random_length_INV."\tGT\t".$hap."\n";
+                    $INV_seq = "";
+                    $NEXT_SV = "";
+                    $id_SV_count++;
+                }
+                
                 $VCF_output{$pos_tmp} = undef;
-                $id_SV_count++;
             }
             elsif ($inverting < $random_length_INV && $inverting ne "")
             {             
@@ -3735,10 +3785,19 @@ VCF_INPUT_INV:
                     my $line_tmp = $seq_ref_line;
                     my $inversion_tmp = substr $line_tmp, 0, $random_length_INV-$inverting, "";
                     $inversion_seq .= $inversion_tmp;
+                    $INV_seq .= $inversion_tmp;
                     my $inversion = reverse($inversion_seq);
                     $inversion =~ tr/ACTG/TGAC/;
                     $inverting = "";
                     $finish_var = "yes";
+                    
+                    my $pos_tmp = $size_current_contig-$random_length_INV+length($inversion_tmp);
+                    my $END_POS_TMP = $pos_tmp+$random_length_INV;
+                    
+                    print OUTPUT_VCF_FULL $chromosome."\t".$pos_tmp."\t".$id_SV_count."\t".$INV_seq."\t<INV>\t.\tPASS\tSVTYPE=INV;END=".$END_POS_TMP.";SVLEN=".$random_length_INV."\tGT\t".$hap."\n";
+                    $INV_seq = "";
+                    $NEXT_SV = "";
+                    $id_SV_count++;
     
                     if ($SVs_whitin_1_line eq "yes")
                     {
@@ -3754,6 +3813,7 @@ VCF_INPUT_INV:
                 {
                    $inverting += length($seq_ref_line);
                    $inversion_seq .= $seq_ref_line;
+                   $INV_seq .= $seq_ref_line;
                 }
             }
             else
@@ -4396,21 +4456,23 @@ close $FILE_REF;
 
 
 my $merge_command = "";
-
-foreach my $merge_command_tmp (keys %merge_command)
+if ($NP_coverage > 0)
 {
-    $merge_command = "cat ".$merge_command{$merge_command_tmp}." > ".$output."Long_reads_".$project."_HAP".$merge_command_tmp.".fasta";
-    system($merge_command);
-    my @remove_files = split /\s/, $merge_command{$merge_command_tmp};
-    foreach my $remove_file_tmp (@remove_files)
+    foreach my $merge_command_tmp (keys %merge_command)
     {
-        my $remove_command = "rm ".$remove_file_tmp;
-        system($remove_command);
+        $merge_command = "cat ".$merge_command{$merge_command_tmp}." > ".$output."Long_reads_".$project."_HAP".$merge_command_tmp.".fasta";
+        system($merge_command);
+        my @remove_files = split /\s/, $merge_command{$merge_command_tmp};
+        foreach my $remove_file_tmp (@remove_files)
+        {
+            my $remove_command = "rm ".$remove_file_tmp;
+            system($remove_command);
+        }
     }
+    
+    my $merge_command2 = "cat ".$output."Long_reads_".$project."_HAP1.fasta"." ".$output."Long_reads_".$project."_HAP2.fasta"." > ".$output."Long_reads_".$project."_HAP12.fasta";
+    system($merge_command2);
 }
-
-my $merge_command2 = "cat ".$output."Long_reads_".$project."_HAP1.fasta"." ".$output."Long_reads_".$project."_HAP2.fasta"." > ".$output."Long_reads_".$project."_HAP12.fasta";
-system($merge_command2);
 
 
 print "\n\n";
