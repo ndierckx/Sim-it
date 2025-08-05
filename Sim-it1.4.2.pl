@@ -14,7 +14,7 @@ use Parallel::ForkManager;
 
 print "\n\n-----------------------------------------------";
 print "\nSim-it\n";
-print "Version 1.4.1\n";
+print "Version 1.4.2\n";
 print "Author: Nicolas Dierckxsens, (c) 2020-2025\n";
 print "-----------------------------------------------\n\n";
 
@@ -146,7 +146,7 @@ my @nucs = ("A","C","T","G");
 GetOptions (
             "c=s" => \$config,
             "o=s" => \$output,
-            ) or die "Incorrect usage!\n\nUsage: perl Sim-it1.4.0.pl -c config_Sim-it.txt -o output/directory/path\n\n";
+            ) or die "Incorrect usage!\n\nUsage: perl Sim-it1.4.2.pl -c config_Sim-it.txt -o output/directory/path\n\n";
 
 open(CONFIG, $config) or die "Error: Can't open the configuration file, please check the manual!\n\nUsage: perl Sim-it.pl -c config.txt -o output_path\n\n";
 
@@ -1052,53 +1052,6 @@ if ($VCF_input ne "")
 print "--------------------------------------------------------------------------------\n\n";
 print OUTPUT_LOG "--------------------------------------------------------------------------------\n\n";
 
-#Generate vcf file---------------------------------------------------------------------------------------------------------------------------------------
-if ($SV_input eq "yes")
-{
-    open(OUTPUT_VCF, ">" .$output_vcf) or die "Can't open variance file $output_vcf, $!\n";
-    open(OUTPUT_VCF_FULL, ">" .$output_vcf_official) or die "Can't open variance file $output_vcf_official, $!\n";
-    
-    my ($wday, $mon, $mday, $hour, $min, $sec, $year) = localtime;
-    my @localtime = split / /, localtime;
-    my %mon2num = qw(
-    Jan 01  Feb 02  Mar 03  Apr 04  May 05  Jun 06
-    Jul 07  Aug 08  Sep 09  Oct 10 Nov 11 Dec 12
-    );
-    my $month = $localtime[1];
-    if (exists($mon2num{$localtime[1]}))
-    {
-       $month = $mon2num{$localtime[1]};
-    }
-    print OUTPUT_VCF "##fileformat=VCFv4.0\n";
-    print OUTPUT_VCF "##fileDate=".$localtime[4].$month.$localtime[2]."\n";
-    print OUTPUT_VCF "##reference=".$reference."\n";
-    #print OUTPUT_VCF "##INFO=<ID=tPOS,Number=1,Type=Float,Description=\"Allele Frequency\">\n";
-    print OUTPUT_VCF "#CHR\tPOS\tSVLENGTH\tTYPE\tVARHAP\tVARSEQ\n";
-    
-    print OUTPUT_VCF_FULL "##fileformat=VCFv4.0\n";
-    print OUTPUT_VCF_FULL "##fileDate=".$localtime[4].$month.$localtime[2]."\n";
-    print OUTPUT_VCF_FULL "##reference=".$reference."\n";
-    print OUTPUT_VCF_FULL "##ALT=<ID=DEL,Description=\"Deletion\">\n";
-    print OUTPUT_VCF_FULL "##ALT=<ID=INV,Description=\"Inversion\">\n";
-    print OUTPUT_VCF_FULL "##ALT=<ID=DUP,Description=\"Duplication\">\n";
-    print OUTPUT_VCF_FULL "##ALT=<ID=INS,Description=\"Insertion\">\n";
-    print OUTPUT_VCF_FULL "##INFO=<ID=SVTYPE,Number=1,Type=String,Description=\"Type of structural variant\">\n";
-    print OUTPUT_VCF_FULL "##INFO=<ID=SVLEN,Number=1,Type=Integer,Description=\"Difference in length between REF and ALT alleles\">\n";
-    print OUTPUT_VCF_FULL "##INFO=<ID=END,Number=1,Type=Integer,Description=\"End position of the variant described in this record\">\n";
-    print OUTPUT_VCF_FULL "##INFO=<ID=SVCALLERS,Number=.,Type=String,Description=\"SV callers that support this SV\">\n";
-    print OUTPUT_VCF_FULL "##FORMAT=<ID=GT,Number=1,Type=String,Description=\"Genotype\">\n";
-    print OUTPUT_VCF_FULL "##FORMAT=<ID=DR,Number=1,Type=Integer,Description=\"# High-quality reference reads\">\n";
-    print OUTPUT_VCF_FULL "##FORMAT=<ID=DV,Number=1,Type=Integer,Description=\"# High-quality variant reads\">\n";
-    print OUTPUT_VCF_FULL "#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tsample1\n";
-
-#--------------------------------------------------------------------------------------------------------------------------------------------------------
-    open(OUTPUT_REF, ">" .$output_ref) or die "Can't open fasta output file $output_ref, $!\n";
-    if ($heterozygosity ne "no" || $VCF_input ne "")
-    {
-        open(OUTPUT_HAP1, ">" .$output_hap1) or die "Can't open haplotype 1 fasta output file $output_hap1, $!\n";
-        open(OUTPUT_HAP2, ">" .$output_hap2) or die "Can't open haplotype 2 fasta output file $output_hap2, $!\n";
-    }
-}
 
 select(STDERR);
 $| = 1;
@@ -1196,7 +1149,6 @@ my $end_pos_next = "";
 my $insert_seq = "";
 my $insert_seq_check = "";
 my $sequence_final = "";
-
 
 while (my $line = <$FILE_REF>)
 {     
@@ -1345,6 +1297,60 @@ while (my $line = <$FILE_REF>)
 $contigs{$last_contig_id} = $reference_size-$pos_last_contig;
 $contigs_chr{$chromosome_tmp} = $reference_size-$pos_last_contig;
 close $FILE_REF;
+
+
+#Generate vcf file---------------------------------------------------------------------------------------------------------------------------------------
+if ($SV_input eq "yes")
+{
+    open(OUTPUT_VCF, ">" .$output_vcf) or die "Can't open variance file $output_vcf, $!\n";
+    open(OUTPUT_VCF_FULL, ">" .$output_vcf_official) or die "Can't open variance file $output_vcf_official, $!\n";
+    
+    my ($wday, $mon, $mday, $hour, $min, $sec, $year) = localtime;
+    my @localtime = split / /, localtime;
+    my %mon2num = qw(
+    Jan 01  Feb 02  Mar 03  Apr 04  May 05  Jun 06
+    Jul 07  Aug 08  Sep 09  Oct 10 Nov 11 Dec 12
+    );
+    my $month = $localtime[1];
+    if (exists($mon2num{$localtime[1]}))
+    {
+       $month = $mon2num{$localtime[1]};
+    }
+    print OUTPUT_VCF "##fileformat=VCFv4.0\n";
+    print OUTPUT_VCF "##fileDate=".$localtime[4].$month.$localtime[2]."\n";
+    print OUTPUT_VCF "##reference=".$reference."\n";
+    #print OUTPUT_VCF "##INFO=<ID=tPOS,Number=1,Type=Float,Description=\"Allele Frequency\">\n";
+    print OUTPUT_VCF "#CHR\tPOS\tSVLENGTH\tTYPE\tVARHAP\tVARSEQ\n";
+    
+    print OUTPUT_VCF_FULL "##fileformat=VCFv4.0\n";
+    print OUTPUT_VCF_FULL "##fileDate=".$localtime[4].$month.$localtime[2]."\n";
+    print OUTPUT_VCF_FULL "##reference=".$reference."\n";
+    foreach my $chromosome_tmpi (keys %contigs_chr)
+    {
+        print OUTPUT_VCF_FULL "##contig=<ID=".$chromosome_tmpi.",length=".$contigs_chr{$chromosome_tmpi}.">\n";
+    }
+    print OUTPUT_VCF_FULL "##ALT=<ID=DEL,Description=\"Deletion\">\n";
+    print OUTPUT_VCF_FULL "##ALT=<ID=INV,Description=\"Inversion\">\n";
+    print OUTPUT_VCF_FULL "##ALT=<ID=DUP,Description=\"Duplication\">\n";
+    print OUTPUT_VCF_FULL "##ALT=<ID=INS,Description=\"Insertion\">\n";
+    print OUTPUT_VCF_FULL "##INFO=<ID=SVTYPE,Number=1,Type=String,Description=\"Type of structural variant\">\n";
+    print OUTPUT_VCF_FULL "##INFO=<ID=SVLEN,Number=1,Type=Integer,Description=\"Difference in length between REF and ALT alleles\">\n";
+    print OUTPUT_VCF_FULL "##INFO=<ID=END,Number=1,Type=Integer,Description=\"End position of the variant described in this record\">\n";
+    print OUTPUT_VCF_FULL "##INFO=<ID=SVCALLERS,Number=.,Type=String,Description=\"SV callers that support this SV\">\n";
+    print OUTPUT_VCF_FULL "##FORMAT=<ID=GT,Number=1,Type=String,Description=\"Genotype\">\n";
+    print OUTPUT_VCF_FULL "##FORMAT=<ID=DR,Number=1,Type=Integer,Description=\"# High-quality reference reads\">\n";
+    print OUTPUT_VCF_FULL "##FORMAT=<ID=DV,Number=1,Type=Integer,Description=\"# High-quality variant reads\">\n";
+    print OUTPUT_VCF_FULL "#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tsample1\n";
+
+#--------------------------------------------------------------------------------------------------------------------------------------------------------
+    open(OUTPUT_REF, ">" .$output_ref) or die "Can't open fasta output file $output_ref, $!\n";
+    if ($heterozygosity ne "no" || $VCF_input ne "")
+    {
+        open(OUTPUT_HAP1, ">" .$output_hap1) or die "Can't open haplotype 1 fasta output file $output_hap1, $!\n";
+        open(OUTPUT_HAP2, ">" .$output_hap2) or die "Can't open haplotype 2 fasta output file $output_hap2, $!\n";
+    }
+}
+
 
 
 #preprep TRA seq-------------------------------------------------------------------------------------------------------
