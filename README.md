@@ -55,7 +55,7 @@ Max threads              = 8
 
 Structural variation:
 -----------------------------
-VCF input                = 
+VCF input                =
 Foreign sequences        =
 
 Deletions                = 0
