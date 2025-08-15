@@ -14,7 +14,7 @@ use Parallel::ForkManager;
 
 print "\n\n-----------------------------------------------";
 print "\nSim-it\n";
-print "Version 1.4.2\n";
+print "Version 1.4.3\n";
 print "Author: Nicolas Dierckxsens, (c) 2020-2025\n";
 print "-----------------------------------------------\n\n";
 
@@ -146,7 +146,7 @@ my @nucs = ("A","C","T","G");
 GetOptions (
             "c=s" => \$config,
             "o=s" => \$output,
-            ) or die "Incorrect usage!\n\nUsage: perl Sim-it1.4.2.pl -c config_Sim-it.txt -o output/directory/path\n\n";
+            ) or die "Incorrect usage!\n\nUsage: perl Sim-it1.4.3.pl -c config_Sim-it.txt -o output/directory/path\n\n";
 
 open(CONFIG, $config) or die "Error: Can't open the configuration file, please check the manual!\n\nUsage: perl Sim-it.pl -c config.txt -o output_path\n\n";
 
@@ -1150,7 +1150,7 @@ my $insert_seq = "";
 my $insert_seq_check = "";
 my $sequence_final = "";
 
-while (my $line = <$FILE_REF>)
+FILE_REF: while (my $line = <$FILE_REF>)
 {     
     chomp $line;
     $line =~ tr/\r//d;
@@ -1192,7 +1192,7 @@ while (my $line = <$FILE_REF>)
                 $sequences_chr{$pos_seq[0]} = $pos_seq[1]."*".$seqs;
             }
         }
-        next;
+        next FILE_REF;
     }
     elsif ($length_fasta_line eq "")
     {
@@ -1215,6 +1215,7 @@ while (my $line = <$FILE_REF>)
     my $end_contig = "";
     if ($first eq '>' || $first eq '@')
     {
+        $size_last_contig = $reference_size-$pos_last_contig;
         $contigs_chr{$chromosome_tmp} = $size_last_contig;
         if ($line =~ m/>(\d+|X|Y|MT)\s+dna:chromosome.*/)
         {
@@ -1233,8 +1234,7 @@ while (my $line = <$FILE_REF>)
             $chromosome_tmp = substr $line, 1;
         }
         $end_contig = "yes";
-        $count_contigs++;
-        $size_last_contig = $reference_size-$pos_last_contig;
+        $count_contigs++;      
         $pos_last_contig = $reference_size;
 
         $contigs{$last_contig_id} = $size_last_contig;
