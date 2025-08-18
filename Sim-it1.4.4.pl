@@ -1063,6 +1063,8 @@ my %contigs;
 undef %contigs;
 my %contigs_chr;
 undef %contigs_chr;
+my @contigs_chr = ();
+my @contigs_chr2 = ();
 
 my @TRA_range = split /-/, $TRA_range;
 my $TRA_range_low = $TRA_range[0];
@@ -1217,6 +1219,8 @@ FILE_REF: while (my $line = <$FILE_REF>)
     {
         $size_last_contig = $reference_size-$pos_last_contig;
         $contigs_chr{$chromosome_tmp} = $size_last_contig;
+        push @contigs_chr, $chromosome_tmp;
+        push @contigs_chr2, $size_last_contig;
         if ($line =~ m/>(\d+|X|Y|MT)\s+dna:chromosome.*/)
         {
             $chromosome_tmp = $1;
@@ -1296,6 +1300,8 @@ FILE_REF: while (my $line = <$FILE_REF>)
 }
 $contigs{$last_contig_id} = $reference_size-$pos_last_contig;
 $contigs_chr{$chromosome_tmp} = $reference_size-$pos_last_contig;
+push @contigs_chr, $chromosome_tmp;
+push @contigs_chr2, $reference_size-$pos_last_contig;
 close $FILE_REF;
 
 
@@ -1325,9 +1331,11 @@ if ($SV_input eq "yes")
     print OUTPUT_VCF_FULL "##fileformat=VCFv4.0\n";
     print OUTPUT_VCF_FULL "##fileDate=".$localtime[4].$month.$localtime[2]."\n";
     print OUTPUT_VCF_FULL "##reference=".$reference."\n";
-    foreach my $chromosome_tmpi (sort {$a <=> $b} keys %contigs_chr)
+    my $v = '0';
+    foreach my $chromosome_tmpi (@contigs_chr)
     {
-        print OUTPUT_VCF_FULL "##contig=<ID=".$chromosome_tmpi.",length=".$contigs_chr{$chromosome_tmpi}.">\n";
+        print OUTPUT_VCF_FULL "##contig=<ID=".$chromosome_tmpi.",length=".$contigs_chr2[$v].">\n";
+        $v++;
     }
     print OUTPUT_VCF_FULL "##ALT=<ID=DEL,Description=\"Deletion\">\n";
     print OUTPUT_VCF_FULL "##ALT=<ID=INV,Description=\"Inversion\">\n";
