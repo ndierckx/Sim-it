@@ -14,7 +14,7 @@ use Parallel::ForkManager;
 
 print "\n\n-----------------------------------------------";
 print "\nSim-it\n";
-print "Version 1.4.3\n";
+print "Version 1.4.4\n";
 print "Author: Nicolas Dierckxsens, (c) 2020-2025\n";
 print "-----------------------------------------------\n\n";
 
@@ -29,7 +29,7 @@ my $detection_limit = '30';
 my $fraction = '2000';
 my $left = '40';
 my $right = '30';
-my $reference_size = '0';
+my $reference_size = '-1';
 my $count_contigs = '1';
 my $length_fasta_line = "";
 my $SVs_whitin_1_line = "";
@@ -146,7 +146,7 @@ my @nucs = ("A","C","T","G");
 GetOptions (
             "c=s" => \$config,
             "o=s" => \$output,
-            ) or die "Incorrect usage!\n\nUsage: perl Sim-it1.4.3.pl -c config_Sim-it.txt -o output/directory/path\n\n";
+            ) or die "Incorrect usage!\n\nUsage: perl Sim-it1.4.4.pl -c config_Sim-it.txt -o output/directory/path\n\n";
 
 open(CONFIG, $config) or die "Error: Can't open the configuration file, please check the manual!\n\nUsage: perl Sim-it.pl -c config.txt -o output_path\n\n";
 
@@ -1155,7 +1155,7 @@ FILE_REF: while (my $line = <$FILE_REF>)
     chomp $line;
     $line =~ tr/\r//d;
     $line =~ s/\R/\012/;
-    if ($reference_size < 1)
+    if ($reference_size < 0)
     {
         $last_contig_id = $line;
         $reference_size++;
@@ -1325,7 +1325,7 @@ if ($SV_input eq "yes")
     print OUTPUT_VCF_FULL "##fileformat=VCFv4.0\n";
     print OUTPUT_VCF_FULL "##fileDate=".$localtime[4].$month.$localtime[2]."\n";
     print OUTPUT_VCF_FULL "##reference=".$reference."\n";
-    foreach my $chromosome_tmpi (keys %contigs_chr)
+    foreach my $chromosome_tmpi (sort {$a <=> $b} keys %contigs_chr)
     {
         print OUTPUT_VCF_FULL "##contig=<ID=".$chromosome_tmpi.",length=".$contigs_chr{$chromosome_tmpi}.">\n";
     }
