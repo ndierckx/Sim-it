@@ -1348,6 +1348,7 @@ if ($SV_input eq "yes")
     print OUTPUT_VCF_FULL "##FORMAT=<ID=GT,Number=1,Type=String,Description=\"Genotype\">\n";
     print OUTPUT_VCF_FULL "##FORMAT=<ID=DR,Number=1,Type=Integer,Description=\"# High-quality reference reads\">\n";
     print OUTPUT_VCF_FULL "##FORMAT=<ID=DV,Number=1,Type=Integer,Description=\"# High-quality variant reads\">\n";
+    print OUTPUT_VCF_FULL "##FORMAT=<ID=CN,Number=1,Type=Integer,Description=\"Copy Number\">\n";
     print OUTPUT_VCF_FULL "#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tsample1\n";
 
 #--------------------------------------------------------------------------------------------------------------------------------------------------------
