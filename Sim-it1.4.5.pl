@@ -14,8 +14,8 @@ use Parallel::ForkManager;
 
 print "\n\n-----------------------------------------------";
 print "\nSim-it\n";
-print "Version 1.4.4\n";
-print "Author: Nicolas Dierckxsens, (c) 2020-2025\n";
+print "Version 1.4.5\n";
+print "Author: Nicolas Dierckxsens, (c) 2020-2026\n";
 print "-----------------------------------------------\n\n";
 
 my $reference = "";
@@ -852,12 +852,13 @@ if ($VCF_input ne "")
             my $first_tmp = substr $line_seq, 0, 1, "";
             if ($first_tmp eq ">" && $id eq "")
             {
-                $id = $line_seq;
+                $id = $line_seq; 
             }
             elsif ($first_tmp eq ">")
             {
                 $foreign_contigs{$id} = $seq;
                 $id = $line_seq;
+                $seq = "";
             }
             elsif ($line_seq ne "" && $line_seq ne " ")
             {
